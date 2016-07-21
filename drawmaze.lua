@@ -4,9 +4,9 @@ local posix  = require 'posix'
 
 -- Parameters.
 
-do_use_curses = true
-maze_color    = nil
-do_animate    = false
+do_use_curses   = true
+maze_color      = nil
+do_animate      = false
 
 drill = nil  -- TEMP TODO delete
 
@@ -20,7 +20,7 @@ end
 
 local function draw_point(x, y, color, point_char)
   if not do_use_curses then
-    print('draw_point(' .. x .. ', ' .. y ..')')
+    --print('draw_point(' .. x .. ', ' .. y ..')')
     return
   end
   point_char = point_char or ' '  -- Space is the default point_char.
@@ -78,26 +78,53 @@ local function drill_from(x, y)
     consider_nbor(nx, ny, nbors)
   end
 
-  -- 2. If we don't have nbors, we're at and end-point in the depth-first srch.
+  -- 2. If we don't have nbors, we're at an endpoint in the depth-first srch.
 
   if #nbors == 0 then return end
 
   -- 3. If we have nbors, choose a random one and drill from there.
+
+  -- TEMP
+  for i, nbor in pairs(nbors) do
+    if already_visited[nbor] then table.remove(nbors, i) end
+    --if math.random(1, 2) == 1 then table.remove(nbors, i) end
+  end
 
   while #nbors > 0 do
     local i = math.random(1, #nbors)
     local nbor = nbors[i]
     local nx, ny = nbor:match('(%d+),(%d+)')
     nx, ny = tonumber(nx), tonumber(ny)
+    if not do_use_curses then
+      print('------')
+      print(('connecting %s and %s'):format(xy_str, nbor))
+      av_self = already_visited[xy_str]
+      print(('already_visited[%s] = %s'):format(xy_str, av_self and 'T' or 'F'))
+      av_nbor = already_visited[nbor]
+      print(('already_visited[%s] = %s'):format(nbor, av_nbor and 'T' or 'F'))
+      print('')
+    end
     table.insert(maze_grid[x][y], nbor)
     table.insert(maze_grid[nx][ny], xy_str)
     if do_animate then coroutine.yield() end
     drill_from(nx, ny)
     table.remove(nbors, i)
+
     -- Filter out visited nbors.
+    local i = 0
+    while i <= #nbors do
+      if already_visited[nbors[i]] then
+        table.remove(nbors, i)
+      else
+        i = i + 1
+      end
+    end
+
+    --[[
     for i, nbor in pairs(nbors) do
       if already_visited[nbor] then table.remove(nbors, i) end
     end
+    --]]
   end
 end
 
@@ -190,6 +217,9 @@ function draw()
 
   -- Make sure w is odd, sliding down one number if needed.
   w = math.ceil(w / 2) * 2 - 1
+
+  -- TEMP
+  --w = 7
   local h = 41
 
   -- Check that w, h are odd.
@@ -203,7 +233,10 @@ function draw()
   draw_border(w, h)
   draw_maze()
 
-  if do_animate then drill(1, 1) end
+  if do_animate then
+    drill(1, 1)
+    os.execute('sleep 0.8')
+  end
 
   --for x = 1, scr_width do
   --  draw_point(x, 1, colors.blue)
