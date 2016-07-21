@@ -6,6 +6,9 @@ local posix  = require 'posix'
 
 do_use_curses = true
 maze_color    = nil
+do_animate    = false
+
+drill = nil  -- TEMP TODO delete
 
 -- maze_grid[x][y] = set of 'x,y' pairs that are adjacent without a wall.
 maze_grid = nil
@@ -41,10 +44,16 @@ local function consider_nbor(nx, ny, nbors)
   end
 end
 
+local num_calls_left = 100
+
 -- This edits maze_grid by adding adjacent grid spaces, effectively drilling
 -- through walls. It's like a depth-first search except that we make some random
 -- choices along the way.
 local function drill_from(x, y)
+
+  num_calls_left = num_calls_left - 1
+
+  -- if num_calls_left <= 0 then return end
 
   local xy_str = ('%d,%d'):format(x, y)
   already_visited[xy_str] = true
@@ -82,6 +91,7 @@ local function drill_from(x, y)
     nx, ny = tonumber(nx), tonumber(ny)
     table.insert(maze_grid[x][y], nbor)
     table.insert(maze_grid[nx][ny], xy_str)
+    if do_animate then coroutine.yield() end
     drill_from(nx, ny)
     table.remove(nbors, i)
     -- Filter out visited nbors.
@@ -102,9 +112,11 @@ local function build_maze(w, h)
     end
   end
 
+  io.stderr:write('maze_grid initialized\n\n')
+
   local x, y = math.random(1, w), math.random(1, h)
 
-  drill_from(x, y)
+  if not do_animate then drill_from(x, y) end
 
   --maze_grid[1][1] = {'2,1', '1,2'}
 
@@ -191,6 +203,8 @@ function draw()
   draw_border(w, h)
   draw_maze()
 
+  if do_animate then drill(1, 1) end
+
   --for x = 1, scr_width do
   --  draw_point(x, 1, colors.blue)
   --end
@@ -200,6 +214,8 @@ function draw()
 end
 
 function init()
+
+  io.stderr:write('init() called\n\n')
 
   colors = { white   = 1, blue = 2, cyan   = 3, green = 4,
              magenta = 5, red  = 6, yellow = 7, black = 8 }
@@ -235,9 +251,19 @@ function init()
 
 end
 
+io.stderr:write('calling init()\n\n')
 init()
 maze_color = colors.blue
 do_repeat = true
+
+io.stderr:write('maze_grid = ' .. tostring(maze_grid) .. '\n\n')
+
+if do_animate then
+  drill = coroutine.wrap(drill_from)
+else
+  drill = drill_from
+end
+
 while do_repeat do
   scr_width = curses.cols()
   draw()
