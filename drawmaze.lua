@@ -21,9 +21,73 @@ local function draw_point(x, y, color, point_char)
     return
   end
   point_char = point_char or ' '  -- Space is the default point_char.
+
   if color then set_color(color) end
   for i = 0, 1 do
     stdscr:mvaddstr(y, 2 * x + i, point_char)
+  end
+end
+
+-- This is a map ('x,y' -> true) for coordintes that we've already visited.
+local already_visited = {}
+
+local function consider_nbor(nx, ny, nbors)
+  if nx > 0 and nx <= w and
+     ny > 0 and ny <= h then
+    xy_str = ('%d,%d'):format(nx, ny)
+    if not already_visited[xy_str] then
+      table.insert(nbors, xy_str)
+    end
+  end
+end
+
+-- This edits maze_grid by adding adjacent grid spaces, effectively drilling
+-- through walls. It's like a depth-first search except that we make some random
+-- choices along the way.
+local function drill_from(x, y)
+
+  local xy_str = ('%d,%d'):format(x, y)
+  already_visited[xy_str] = true
+
+  x = tonumber(x)
+  y = tonumber(y)
+
+  w = #maze_grid
+  h = #maze_grid[1]
+
+  -- 1. Find available neighbors.
+
+  local nbors = {}  -- This will be a list of 'x,y' strings.
+
+  for dx = -1, 1, 2 do
+    local nx, ny = x + dx, y
+    consider_nbor(nx, ny, nbors)
+  end
+
+  for dy = -1, 1, 2 do
+    local nx, ny = x, y + dy
+    consider_nbor(nx, ny, nbors)
+  end
+
+  -- 2. If we don't have nbors, we're at and end-point in the depth-first srch.
+
+  if #nbors == 0 then return end
+
+  -- 3. If we have nbors, choose a random one and drill from there.
+
+  while #nbors > 0 do
+    local i = math.random(1, #nbors)
+    local nbor = nbors[i]
+    local nx, ny = nbor:match('(%d+),(%d+)')
+    nx, ny = tonumber(nx), tonumber(ny)
+    table.insert(maze_grid[x][y], nbor)
+    table.insert(maze_grid[nx][ny], xy_str)
+    drill_from(nx, ny)
+    table.remove(nbors, i)
+    -- Filter out visited nbors.
+    for i, nbor in pairs(nbors) do
+      if already_visited[nbor] then table.remove(nbors, i) end
+    end
   end
 end
 
@@ -37,6 +101,12 @@ local function build_maze(w, h)
       maze_grid[x][y] = {}
     end
   end
+
+  local x, y = math.random(1, w), math.random(1, h)
+
+  drill_from(x, y)
+
+  --maze_grid[1][1] = {'2,1', '1,2'}
 
   -- TODO build maze_grid
 end
