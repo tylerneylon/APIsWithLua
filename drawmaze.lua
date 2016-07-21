@@ -6,7 +6,7 @@ local posix  = require 'posix'
 
 do_use_curses   = true
 maze_color      = nil
-do_animate      = false
+do_animate      = true
 
 drill = nil  -- TEMP TODO delete
 
@@ -110,7 +110,9 @@ local function drill_from(x, y)
     drill_from(nx, ny)
     table.remove(nbors, i)
 
-    -- Filter out visited nbors.
+    -- Method 1.
+    -- Filter out visited nbors. This method works correctly.
+    --[=[
     local i = 0
     while i <= #nbors do
       if already_visited[nbors[i]] then
@@ -119,12 +121,28 @@ local function drill_from(x, y)
         i = i + 1
       end
     end
+    --]=]
 
+    -- Method 2.
+    -- Filter out visited nbors. This method lets some already visited nbors
+    -- through the filter, which results in some holes in the walls.
     --[[
     for i, nbor in pairs(nbors) do
       if already_visited[nbor] then table.remove(nbors, i) end
     end
     --]]
+    
+    -- Method 3.
+    -- Filter out visited nbors. This method lets some already visited nbors
+    -- through the filter, but fewer than method 2.
+    local i = 0
+    while i <= #nbors do
+      if already_visited[nbors[i]] and math.random(1, 100) >= 25 then
+        table.remove(nbors, i)
+      else
+        i = i + 1
+      end
+    end
   end
 end
 
@@ -235,7 +253,7 @@ function draw()
 
   if do_animate then
     drill(1, 1)
-    os.execute('sleep 0.8')
+    --os.execute('sleep 0.8')
   end
 
   --for x = 1, scr_width do
