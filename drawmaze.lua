@@ -4,9 +4,11 @@ local posix  = require 'posix'
 
 -- Parameters.
 
-do_use_curses   = true
-maze_color      = nil
-do_animate      = true
+do_use_curses       = true
+maze_color          = nil
+do_animate          = false
+is_animate_done     = false
+percent_extra_paths = 30
 
 drill = nil  -- TEMP TODO delete
 
@@ -137,13 +139,16 @@ local function drill_from(x, y)
     -- through the filter, but fewer than method 2.
     local i = 0
     while i <= #nbors do
-      if already_visited[nbors[i]] and math.random(1, 100) >= 25 then
+      local is_extra_path_ok = (math.random(1, 100) >= percent_extra_paths)
+      if already_visited[nbors[i]] and is_extra_path_ok then
         table.remove(nbors, i)
       else
         i = i + 1
       end
     end
   end
+
+  return 'done'
 end
 
 local function build_maze(w, h)
@@ -238,7 +243,7 @@ function draw()
 
   -- TEMP
   --w = 7
-  local h = 41
+  local h = 31
 
   -- Check that w, h are odd.
   assert((w - 1) / 2 == math.floor(w / 2))
@@ -251,9 +256,10 @@ function draw()
   draw_border(w, h)
   draw_maze()
 
-  if do_animate then
-    drill(1, 1)
-    --os.execute('sleep 0.8')
+  if do_animate and not is_animate_done then
+    status = drill(1, 1)
+    os.execute('sleep 0.01')
+    if status == 'done' then is_animate_done = true end
   end
 
   --for x = 1, scr_width do
@@ -265,6 +271,8 @@ function draw()
 end
 
 function init()
+
+  math.randomseed(os.time())
 
   io.stderr:write('init() called\n\n')
 
