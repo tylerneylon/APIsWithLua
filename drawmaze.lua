@@ -265,6 +265,18 @@ function draw()
   --for x = 1, scr_width do
   --  draw_point(x, 1, colors.blue)
   --end
+  
+  -- Below is an attempt to draw a character, but it wasn't working for me.
+  --[[
+  --draw_point(1, 1, colors.yellow, '*')
+  if do_use_curses then
+    local c = colors.red
+    stdscr:attron(curses.color_pair(c))
+    local x, y = 1, 1
+    stdscr:mvaddstr(y, 2 * x + 0, '>')
+    stdscr:mvaddstr(y, 2 * x + 1, '-')
+  end
+  --]]
 
   -- TODO HERE
   if do_use_curses then stdscr:refresh() end  -- TODO needed?
