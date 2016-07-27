@@ -34,6 +34,11 @@ local grid_w, grid_h = nil, nil
 local bg_color = 0  -- Black by default.  -- TODO consider if these are good
 local fg_color = 7  -- White by default.
 
+
+local player = {pos = {1, 1}}
+
+
+
 local function str_from_cmd(cmd)
   local p = io.popen(cmd)
   local s = p:read()
@@ -280,8 +285,9 @@ end
 local wcolor = 1
 
 local function ensure_color(sprite)
-  local fg = {dots = 242}  -- Missing entries mean we don't care.
-  local bg = {dots = 0, wall = 27}
+  -- Missing entries mean we don't care.
+  local fg = {dots = 242, player = 0}
+  local bg = {dots = 0, wall = 27, player = 226}
 
   --bg.wall = wcolor
 
@@ -300,6 +306,14 @@ local function ensure_color(sprite)
     end
   end
   assert(false)  -- We should have recognized sprite name by now.
+end
+
+local function draw_player()
+  ensure_color('player')
+  local x = 2 * player.pos[1]
+  local y =     player.pos[2]
+  cached_cmd('tput cup ' .. y .. ' ' .. x)
+  io.write('>-')
 end
 
 local function draw_maze()
@@ -355,8 +369,9 @@ local function draw()
   --if do_use_curses then stdscr:erase() end
   if do_use_curses then io.write(term_home_str) end
 
-  draw_border(grid_w, grid_h)
-  draw_maze()
+  --draw_border(grid_w, grid_h)
+  --draw_maze()
+  draw_player()
 
   if do_animate and not is_animate_done then
     status = drill(1, 1)
@@ -404,6 +419,8 @@ function init()
 
   colors = { white   = 1, blue = 2, cyan   = 3, green = 4,
              magenta = 5, red  = 6, yellow = 7, black = 8 }
+
+  draw_maze()
 
   if not do_use_curses then return end
 end
