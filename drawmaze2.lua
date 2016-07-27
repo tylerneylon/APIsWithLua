@@ -28,7 +28,9 @@ local term_home_str
 
 
 -- maze_grid[x][y] = set of 'x,y' pairs that are adjacent without a wall.
-maze_grid = nil
+local maze_grid = nil
+local grid      = nil  -- grid[x][y] = what's at that spot; falsy == wall.
+local grid_w, grid_h = nil, nil
 
 local function str_from_cmd(cmd)
   local p = io.popen(cmd)
@@ -220,12 +222,18 @@ local function get_wall_pos(x, y, dx, dy)
   return x, y
 end
 
-local function draw_maze()
-  w = #maze_grid
-  h = #maze_grid[1]
+local function convert_maze_to_grid()
+  -- Build grid.
 
-  for x = 1, w do
-    for y = 1, h do
+
+end
+
+local function draw_maze()
+  maze_w = #maze_grid
+  maze_h = #maze_grid[1]
+
+  for x = 1, maze_w do
+    for y = 1, maze_h do
 
       -- Determine nbor directions which have a wall.
       local nbors = {('%d,%d'):format(x + 1, y),
@@ -251,50 +259,28 @@ local function draw_maze()
   end
 end
 
-function draw_border(w, h)
+local function draw_border()
+  --io.stderr:write('draw_border()\n')
   local c = maze_color
   if not do_use_curses then print('w = ' .. w) end
   local k = 2
-  --for x = 0, w - k, k do
-  for x = 0, w - 1, w - 1 do
-    --print('math.floor(w - k / 2) = ' .. math.floor(w - k / 2))
-    --print('x = ' .. x)
-    for y = 0, h - 1 do
+  for x = 0, grid_w - 1, grid_w - 1 do
+    for y = 0, grid_h - 1 do
       draw_point(x, y, c)
     end
   end
-  for y = 0, h - 1, h - 1 do
-    for x = 0, w - 1 do
+  for y = 0, grid_h - 1, grid_h - 1 do
+    for x = 0, grid_w - 1 do
       draw_point(x, y, c)
     end
   end
 end
 
-function draw()
+local function draw()
   --if do_use_curses then stdscr:erase() end
   if do_use_curses then io.write(term_home_str) end
 
-  --local scr_width = curses.cols() - 1  -- Avoid the rightmost column.
-  local scr_width = cols - 1  -- Avoid the rightmost column.
-  local w = math.floor(scr_width / 2)
-  if not do_use_curses then w = 116 end
-
-  -- Make sure w is odd, sliding down one number if needed.
-  w = math.ceil(w / 2) * 2 - 1
-
-  -- TEMP
-  --w = 7
-  local h = 31
-
-  -- Check that w, h are odd.
-  assert((w - 1) / 2 == math.floor(w / 2))
-  assert((h - 1) / 2 == math.floor(h / 2))
-
-  if maze_grid == nil then
-    build_maze((w - 1) / 2, (h - 1) / 2)
-  end
-
-  draw_border(w, h)
+  draw_border(grid_w, grid_h)
   draw_maze()
 
   if do_animate and not is_animate_done then
@@ -333,8 +319,20 @@ end
 
 function init()
 
+  os.execute('tput civis')
+
   cols  = num_from_cmd('tput cols')
   lines = num_from_cmd('tput lines')
+
+  grid_w = math.floor((cols - 1) / 2)          -- Grid cells are 2 chars.
+  grid_w = math.ceil(grid_w / 2) * 2 - 1       -- Ensure grid_w is odd.
+  grid_h = math.ceil((lines - 1) / 2) * 2 - 1  -- Ensure grid_h is odd.
+
+  -- Check that grid_w, grid_h are odd.
+  assert((grid_w - 1) / 2 == math.floor(grid_w / 2))
+  assert((grid_h - 1) / 2 == math.floor(grid_h / 2))
+
+  build_maze((grid_w - 1) / 2, (grid_h - 1) / 2)
 
   term_clear_str = str_from_cmd('tput clear')
   term_home_str = str_from_cmd('tput home')
@@ -380,24 +378,30 @@ function init()
 
 end
 
-io.stderr:write('calling init()\n\n')
-init()
-maze_color = 1
-do_repeat = true
+local function main()
+  io.stderr:write('calling init()\n\n')
+  init()
+  maze_color = 1
+  do_repeat = true
 
-io.stderr:write('maze_grid = ' .. tostring(maze_grid) .. '\n\n')
+  io.stderr:write('maze_grid = ' .. tostring(maze_grid) .. '\n\n')
 
-if do_animate then
-  drill = coroutine.wrap(drill_from)
-else
-  drill = drill_from
+  if do_animate then
+    drill = coroutine.wrap(drill_from)
+  else
+    drill = drill_from
+  end
+
+  while do_repeat do
+    --scr_width = curses.cols()
+    draw()
+    do_repeat = do_use_curses
+  end
+
+  --if do_use_curses then curses.endwin() end
+  print('saw scr_width = ' .. scr_width)
 end
 
-while do_repeat do
-  --scr_width = curses.cols()
-  draw()
-  do_repeat = do_use_curses
+if not pcall(main) then  -- Be able to execute code following a SIGINT / ctrl-C.
+  os.execute('tput reset')
 end
-
---if do_use_curses then curses.endwin() end
-print('saw scr_width = ' .. scr_width)
