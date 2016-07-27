@@ -31,6 +31,8 @@ local term_home_str
 local maze_grid = nil
 local grid      = nil  -- grid[x][y] = what's at that spot; falsy == wall.
 local grid_w, grid_h = nil, nil
+local bg_color = 0  -- Black by default.  -- TODO consider if these are good
+local fg_color = 7  -- White by default.
 
 local function str_from_cmd(cmd)
   local p = io.popen(cmd)
@@ -58,6 +60,17 @@ local function draw_char_at_pt(y, x, ch)
     term_cup_strs[xy_str] = str_from_cmd('tput cup ' .. y .. ' ' .. x)
   end
   io.write(term_cup_strs[xy_str] .. ' ')
+end
+
+-- TODO Consolidate tput calls into this.
+
+local term_strs = {}  -- Maps cmd -> str.
+
+local function cached_cmd(cmd)
+  if not term_strs[cmd] then
+    term_strs[cmd] = str_from_cmd(cmd)
+  end
+  io.write(term_strs[cmd])
 end
 
 local function draw_point(x, y, color, point_char)
@@ -222,13 +235,15 @@ local function get_wall_pos(x, y, dx, dy)
   return x, y
 end
 
-local function convert_maze_to_grid()
-  -- Build grid.
+local function setup_grid()
 
+  -- Set up an empty grid.
+  grid = {}
+  for x = 1, grid_w do
+    grid[x] = {}
+  end
 
-end
-
-local function draw_maze()
+  -- Convert maze_grid to grid.
   maze_w = #maze_grid
   maze_h = #maze_grid[1]
 
@@ -236,30 +251,90 @@ local function draw_maze()
     for y = 1, maze_h do
 
       -- Determine nbor directions which have a wall.
-      local nbors = {('%d,%d'):format(x + 1, y),
-                     ('%d,%d'):format(x + 1, y + 1),
-                     ('%d,%d'):format(x, y + 1)}
+      local nbors = {[('%d,%d'):format(x + 1, y)]     = 'wall',
+                     [('%d,%d'):format(x + 1, y + 1)] = 'wall',
+                     [('%d,%d'):format(x,     y + 1)] = 'wall'}
       for _, other in pairs(maze_grid[x][y]) do
-        for i, nbor in pairs(nbors) do
+        for nbor in pairs(nbors) do
           if other == nbor then
-            table.remove(nbors, i)  -- Remove nbor; no wall that way.
+            nbors[nbor] = 'open'
           end
         end
       end
 
-      -- Draw remaining nbor directions with a wall.
-      for _, nbor in pairs(nbors) do
+      -- Move data into grid.
+      for nbor, state in pairs(nbors) do
         -- Parse out the x, y delta.
         local nx, ny = nbor:match('(%d+),(%d+)')
         local dx, dy = nx - x, ny - y
         local px, py = get_wall_pos(x, y, dx, dy)
-        draw_point(px, py, maze_color)
+        grid[px][py] = false
+        if state == 'open' then grid[px][py] = '.' end
       end
+      local px, py = get_wall_pos(x, y, 0, 0)
+      grid[px][py] = '.'
     end
   end
 end
 
+local wcolor = 1
+
+local function ensure_color(sprite)
+  local fg = {dots = 242}  -- Missing entries mean we don't care.
+  local bg = {dots = 0, wall = 27}
+
+  --bg.wall = wcolor
+
+  for name, bg_val in pairs(bg) do
+    if name == sprite then
+      if bg_color ~= bg_val then
+        cached_cmd('tput setab ' .. bg_val)
+        bg_color = bg_val
+      end
+      local fg_val = fg[name]
+      if fg_val and fg_color ~= fg_val then
+        cached_cmd('tput setaf ' .. fg_val)
+        fg_color = fg_val
+      end
+      return
+    end
+  end
+  assert(false)  -- We should have recognized sprite name by now.
+end
+
+local function draw_maze()
+  -- XXX
+  --wcolor = (wcolor + 1) % 256
+
+  if math.random() < 0.1 then
+    local delta = 1
+    if math.random() < 0.5 then delta = -1 end
+    wcolor = wcolor + delta
+    if wcolor < 242 then wcolor = 242 end
+    if wcolor > 255 then wcolor = 255 end
+  end
+
+  cached_cmd('tput home')
+  for y = 0, grid_h - 1 do
+    for x = 0, grid_w - 1 do
+      if grid[x] and grid[x][y] then
+        -- Draw dots.
+        ensure_color('dots')
+        io.write('. ')
+      else
+        -- Draw a wall.
+        ensure_color('wall')
+        io.write('  ')
+      end
+    end
+    io.write('\n')
+  end
+end
+
 local function draw_border()
+  -- XXX
+  do return end
+
   --io.stderr:write('draw_border()\n')
   local c = maze_color
   if not do_use_curses then print('w = ' .. w) end
@@ -289,24 +364,6 @@ local function draw()
     if status == 'done' then is_animate_done = true end
   end
 
-  --for x = 1, scr_width do
-  --  draw_point(x, 1, colors.blue)
-  --end
-  
-  -- Below is an attempt to draw a character, but it wasn't working for me.
-  --[[
-  --draw_point(1, 1, colors.yellow, '*')
-  if do_use_curses then
-    local c = colors.red
-    stdscr:attron(curses.color_pair(c))
-    local x, y = 1, 1
-    stdscr:mvaddstr(y, 2 * x + 0, '>')
-    stdscr:mvaddstr(y, 2 * x + 1, '-')
-  end
-  --]]
-
-  -- TODO HERE
-  --if do_use_curses then stdscr:refresh() end  -- TODO needed?
   if do_use_curses then io.flush() end  -- TODO needed?
 end
 
@@ -319,20 +376,23 @@ end
 
 function init()
 
+  os.execute('tput reset')
   os.execute('tput civis')
 
   cols  = num_from_cmd('tput cols')
   lines = num_from_cmd('tput lines')
 
-  grid_w = math.floor((cols - 1) / 2)          -- Grid cells are 2 chars.
+  -- XXX
+  grid_w = math.floor((cols - 5) / 2)          -- Grid cells are 2 chars.
   grid_w = math.ceil(grid_w / 2) * 2 - 1       -- Ensure grid_w is odd.
-  grid_h = math.ceil((lines - 1) / 2) * 2 - 1  -- Ensure grid_h is odd.
+  grid_h = math.ceil((lines - 5) / 2) * 2 - 1  -- Ensure grid_h is odd.
 
   -- Check that grid_w, grid_h are odd.
   assert((grid_w - 1) / 2 == math.floor(grid_w / 2))
   assert((grid_h - 1) / 2 == math.floor(grid_h / 2))
 
   build_maze((grid_w - 1) / 2, (grid_h - 1) / 2)
+  setup_grid()
 
   term_clear_str = str_from_cmd('tput clear')
   term_home_str = str_from_cmd('tput home')
@@ -346,36 +406,6 @@ function init()
              magenta = 5, red  = 6, yellow = 7, black = 8 }
 
   if not do_use_curses then return end
-
-  --[[
-  -- Start up curses.
-  curses.initscr()    -- Initialize the curses library and the terminal screen.
-  curses.cbreak()     -- Turn off input line buffering.
-  curses.echo(false)  -- Don't print out characters as the user types them.
-  curses.nl(false)    -- Turn off special-case return/newline handling.
-  curses.curs_set(0)  -- Hide the cursor.
-
-  -- Set up colors.
-  curses.start_color()
-  if not curses.has_colors() then
-    curses.endwin()
-    print('Bummer! Looks like your terminal doesn\'t support colors :\'(')
-    os.exit(1)
-  end
-  for k, v in pairs(colors) do
-    curses_color = curses['COLOR_' .. k:upper()]
-    curses.init_pair(v, curses_color, curses_color)
-  end
-  colors.text, colors.over = 9, 10
-  curses.init_pair(colors.text, curses.COLOR_WHITE, curses.COLOR_BLACK)
-  curses.init_pair(colors.over, curses.COLOR_RED,   curses.COLOR_BLACK)
-
-  -- Set up our standard screen.
-  stdscr = curses.stdscr()
-  stdscr:nodelay(true)  -- Make getch nonblocking.
-  stdscr:keypad()       -- Correctly catch arrow key presses.
-  --]]
-
 end
 
 local function main()
