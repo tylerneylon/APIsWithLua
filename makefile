@@ -1,4 +1,7 @@
 all: eatyguy
 
-eatyguy: eatyguy.c
-	cc $< -o $@ -llua -L.
+clean:
+	rm eatyguy
+
+eatyguy: eatyguy.c clua.c
+	cc $^ -o $@ -llua -L.
