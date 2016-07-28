@@ -407,7 +407,7 @@ local function update(elapsed, key)
   update_player(elapsed, key)
 end
 
-local function draw_player()
+local function draw_player(elapsed)
   -- Set up player-drawing data.
   local open, close = "'<", "'-"
   if     player.dir[1] ==  1 then
@@ -415,9 +415,9 @@ local function draw_player()
   elseif player.dir[1] == -1 then
     open, close = ">'", "-'"
   elseif player.dir[2] ==  1 then
-    open, close = "'^", "'|"
+    open, close = "^'", "|'"
   elseif player.dir[2] == -1 then
-    open, close = "v.", "|."
+    open, close = "v.", "'."
   end
 
   -- Draw the player.
@@ -425,7 +425,9 @@ local function draw_player()
   local x = 2 * player.pos[1]
   local y =     player.pos[2]
   cached_cmd('tput cup ' .. y .. ' ' .. x)
-  if (math.floor(frame_num / 20)) % 2 == 0 then
+  local anim_timestep = 0.2
+  if math.floor(elapsed / anim_timestep) % 2 == 0 then
+  --if (math.floor(frame_num / 20)) % 2 == 0 then
     io.write(open)
   else
     io.write(close)
@@ -471,12 +473,12 @@ local function draw_maze()
   end
 end
 
-local function draw()
+local function draw(elapsed)
   --if do_use_curses then stdscr:erase() end
   if do_use_curses then io.write(term_home_str) end
 
   --draw_maze()
-  draw_player()
+  draw_player(elapsed)
 
   if do_animate and not is_animate_done then
     status = drill(1, 1)
@@ -533,11 +535,8 @@ function eatyguy.init()
 end
 
 function eatyguy.loop(elapsed, key)
-
-  io.stderr:write(('eatyguy.loop(%g, %d)'):format(elapsed, key))
-
   update(elapsed, key)
-  draw()
+  draw(elapsed)
   frame_num = frame_num + 1
 end
 
