@@ -36,7 +36,9 @@ local bg_color = 0  -- Black by default.  -- TODO consider if these are good
 local fg_color = 7  -- White by default.
 
 
-local player = {pos = {1, 1}, dir = {1, 0}}
+local player = {pos      = {1, 1},
+                dir      = {1, 0},
+                next_dir = {1, 0}}
 local frame_num = 0
 
 
@@ -338,21 +340,49 @@ local function set_rand_dir(ch)
   ch.pos = {p[1] + ch.dir[1], p[2] + ch.dir[2]}
 end
 
-local function update_player()
-  -- Only make a change once every 20 frames.
-  if frame_num % 10 ~= 0 then return end
+-- Check if a character can move in a given direction.
+-- Return can_move, new_pos.
+local function can_move_in_dir(character, dir)
+  local p = character.pos
+  local gx, gy = p[1] + dir[1], p[2] + dir[2]
+  return (grid[gx] and grid[gx][gy]), {gx, gy}
+end
 
-  -- Save the old position.
-  player.old_pos = player.pos
+local next_move_time = 0
+local move_delta     = 0.2  -- seconds
+
+local function update_player(elapsed, key)
+
+  --cached_cmd('tput cup ' .. (lines - 1) .. ' 0')
+  --io.write(('key = %d'):format(key))
+
+  -- Update our direction if we have a known key.
+  local dir_by_key = {
+    [68] = {-1,  0},
+    [65] = { 0, -1},
+    [66] = { 0,  1},
+    [67] = { 1,  0}
+  }
+  if dir_by_key[key] then
+    player.next_dir = dir_by_key[key]
+  end
+
+  -- Change direction if we can; otherwise the next_dir will take effect if we
+  -- hit a corner where we can turn in that direction.
+  if can_move_in_dir(player, player.next_dir) then
+    player.dir = player.next_dir
+  end
+
+  -- Don't move if it's not a move timestamp.
+  if elapsed < next_move_time then return end
+  next_move_time = next_move_time + move_delta
+
 
   -- Move in player.dir if possible.
-  local p = player.pos
-  local d = player.dir
-  local gx, gy = p[1] + d[1], p[2] + d[2]
-  if grid[gx] and grid[gx][gy] then
-    player.pos = {gx, gy}
-  else
-    set_rand_dir(player)
+  local can_move, new_pos = can_move_in_dir(player, player.dir)
+  if can_move then
+    player.old_pos = player.pos  -- Save the old position.
+    player.pos = new_pos
   end
 
   do return end
@@ -373,30 +403,21 @@ local function update_player()
   player.pos = spaces[dir]
 end
 
-local function update()
-  update_player()
+local function update(elapsed, key)
+  update_player(elapsed, key)
 end
 
 local function draw_player()
-  -- Erase old player if appropriate.
-  if player.old_pos then
-    ensure_color('dots')
-    local x = 2 * player.old_pos[1]
-    local y =     player.old_pos[2]
-    cached_cmd('tput cup ' .. y .. ' ' .. x)
-    io.write('. ')
-  end
-
   -- Set up player-drawing data.
-  local open, close = ' <', ' -'
+  local open, close = "'<", "'-"
   if     player.dir[1] ==  1 then
-    open, close = ' <', ' -'
+    open, close = "'<", "'-"
   elseif player.dir[1] == -1 then
-    open, close = '> ', '- '
+    open, close = ">'", "-'"
   elseif player.dir[2] ==  1 then
-    open, close = ' ^', ' |'
+    open, close = "'^", "'|"
   elseif player.dir[2] == -1 then
-    open, close = 'v ', '| '
+    open, close = "v.", "|."
   end
 
   -- Draw the player.
@@ -408,6 +429,16 @@ local function draw_player()
     io.write(open)
   else
     io.write(close)
+  end
+
+  -- Erase old player if appropriate.
+  if player.old_pos then
+    ensure_color('dots')
+    local x = 2 * player.old_pos[1]
+    local y =     player.old_pos[2]
+    cached_cmd('tput cup ' .. y .. ' ' .. x)
+    io.write('. ')
+    player.old_pos = nil
   end
 end
 
@@ -502,46 +533,12 @@ function eatyguy.init()
 end
 
 function eatyguy.loop(elapsed, key)
-  update()
+
+  io.stderr:write(('eatyguy.loop(%g, %d)'):format(elapsed, key))
+
+  update(elapsed, key)
   draw()
   frame_num = frame_num + 1
 end
-
-local function main()
-  -- io.stderr:write('calling init()\n\n')
-  init()
-  do_repeat = true
-
-  -- io.stderr:write('maze_grid = ' .. tostring(maze_grid) .. '\n\n')
-
-  if do_animate then
-    drill = coroutine.wrap(drill_from)
-  else
-    drill = drill_from
-  end
-
-  while do_repeat do
-    --scr_width = curses.cols()
-    loop()
-
-    -- TEMP While developing game.
-    -- The long-term plan is to keep the event loop in C.
-    local sec, nsec = 0, 16e6  -- 0.016 seconds.
-    posix.nanosleep(sec, nsec)
-
-    do_repeat = do_use_curses
-  end
-
-  --if do_use_curses then curses.endwin() end
-  --print('saw scr_width = ' .. scr_width)
-end
-
---main()
-
---[[
-if not pcall(main) then  -- Be able to execute code following a SIGINT / ctrl-C.
-  os.execute('tput reset')
-end
---]]
 
 return eatyguy

@@ -79,7 +79,7 @@ void loop(lua_State *L) {
 
   call(L, "eatyguy", "loop", "di", elapsed, key);
 
-  struct timespec delay = { .tv_sec = 0, .tv_nsec = 16e6 };  // 16 ms
+  struct timespec delay = { .tv_sec = 0, .tv_nsec = 32e6 };  // 32 ms
   nanosleep(&delay, NULL);
 }
 
