@@ -27,26 +27,29 @@ double gettime() {
 }
 
 lua_State *init() {
+
+  // Initialize the terminal state for drawing an input.
   system("stty raw");
   fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL) | O_NONBLOCK);
 
+  // Set up our timer.
+  start = gettime();
+
+  // Set up the Lua state and load eatyguy.lua.
   lua_State *L = luaL_newstate();
   luaL_openlibs(L);
-
-  luaL_dofile(L, "script1.lua");
+  luaL_dofile(L, "eatyguy.lua");
   // The Lua stack now has the return values from the script.
-  lua_setglobal(L, "script1");
+  lua_setglobal(L, "eatyguy");
   lua_settop(L, 0);  // Clear the stack.
-
-  call(L, "script1", "init", "");
-
-  start = gettime();
+  call(L, "eatyguy", "init", "");
 
   return L;
 }
 
 void done() {
   system("stty cooked");
+  system("tput reset");
   exit(0);
 }
 
@@ -71,9 +74,10 @@ void loop(lua_State *L) {
   int    key     = getkey();
   double elapsed = gettime() - start;
 
-  if (key == 32) done();
+  // Exit if the user hits esc or the q key.
+  if (key == 27 || key == 'q' || key == 'Q') done();
 
-  call(L, "script1", "loop", "di", elapsed, key);
+  call(L, "eatyguy", "loop", "di", elapsed, key);
 
   struct timespec delay = { .tv_sec = 0, .tv_nsec = 16e6 };  // 16 ms
   nanosleep(&delay, NULL);
