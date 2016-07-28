@@ -341,6 +341,9 @@ local function set_rand_dir(ch)
   local dir = math.random(#dirs)
   ch.dir = dirs[dir]
   ch.pos = {p[1] + ch.dir[1], p[2] + ch.dir[2]}
+
+  -- Set next_dir to a random delta.
+  ch.next_dir = deltas[math.random(4)]
 end
 
 -- Check if a character can move in a given direction.
@@ -401,9 +404,18 @@ local function update_player(elapsed, key, do_move)
   player.pos = spaces[dir]
 end
 
+local function set_random_next_dir(character)
+  local deltas = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}}
+  character.next_dir = deltas[math.random(4)]
+end
+
 local function update_baddy(elapsed, baddy, do_move)
   if not do_move then return end
   baddy.old_pos = baddy.pos
+  if can_move_in_dir(baddy, baddy.next_dir) then
+    baddy.dir = baddy.next_dir
+    set_random_next_dir(baddy)
+  end
   local can_move, new_pos = can_move_in_dir(baddy, baddy.dir)
   if can_move then
     baddy.pos = new_pos
