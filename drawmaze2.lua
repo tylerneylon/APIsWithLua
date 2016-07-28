@@ -3,6 +3,10 @@
 -- Precursor to a game to be used to show off some example code.
 --
 
+-- Temp requires.
+
+local posix = require 'posix'
+
 
 -- Parameters.
 
@@ -36,6 +40,7 @@ local fg_color = 7  -- White by default.
 
 
 local player = {pos = {1, 1}}
+local frame_num = 0
 
 
 
@@ -308,12 +313,60 @@ local function ensure_color(sprite)
   assert(false)  -- We should have recognized sprite name by now.
 end
 
+--[[
+local function maze_pt_from_grid_pt(x, y)
+  -- Map 1 -> 1; 3 -> 2, etc.
+  x = (x - 1)
+end
+--]]
+
+local function update_player()
+  -- Only make a change once every 20 frames.
+  if frame_num % 10 ~= 0 then return end
+
+  -- Save the old position.
+  player.old_pos = player.pos
+
+  -- Find open spaces.
+  local spaces = {}
+  local deltas = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}}
+  local p = player.pos
+  for _, d in pairs(deltas) do
+    local gx, gy = p[1] + d[1], p[2] + d[2]
+    if grid[gx] and grid[gx][gy] then
+      table.insert(spaces, {gx, gy})
+    end
+  end
+
+  -- Choose a random direction and go that way.
+  local dir = math.random(#spaces)
+  player.pos = spaces[dir]
+end
+
+local function update()
+  update_player()
+end
+
 local function draw_player()
+  -- Erase old player if appropriate.
+  if player.old_pos then
+    ensure_color('dots')
+    local x = 2 * player.old_pos[1]
+    local y =     player.old_pos[2]
+    cached_cmd('tput cup ' .. y .. ' ' .. x)
+    io.write('. ')
+  end
+
+  -- Draw the player.
   ensure_color('player')
   local x = 2 * player.pos[1]
   local y =     player.pos[2]
   cached_cmd('tput cup ' .. y .. ' ' .. x)
-  io.write('>-')
+  if (math.floor(frame_num / 20)) % 2 == 0 then
+    io.write('|\\')
+  else
+    io.write('||')
+  end
 end
 
 local function draw_maze()
@@ -425,6 +478,12 @@ function init()
   if not do_use_curses then return end
 end
 
+local function loop()
+  update()
+  draw()
+  frame_num = frame_num + 1
+end
+
 local function main()
   io.stderr:write('calling init()\n\n')
   init()
@@ -441,7 +500,13 @@ local function main()
 
   while do_repeat do
     --scr_width = curses.cols()
-    draw()
+    loop()
+
+    -- TEMP While developing game.
+    -- The long-term plan is to keep the event loop in C.
+    local sec, nsec = 0, 16e6  -- 0.016 seconds.
+    posix.nanosleep(sec, nsec)
+
     do_repeat = do_use_curses
   end
 
@@ -449,6 +514,10 @@ local function main()
   print('saw scr_width = ' .. scr_width)
 end
 
+main()
+
+--[[
 if not pcall(main) then  -- Be able to execute code following a SIGINT / ctrl-C.
   os.execute('tput reset')
 end
+--]]
