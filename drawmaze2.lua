@@ -390,15 +390,27 @@ local function draw_player()
     io.write('. ')
   end
 
+  -- Set up player-drawing data.
+  local open, close = ' <', ' -'
+  if     player.dir[1] ==  1 then
+    open, close = ' <', ' -'
+  elseif player.dir[1] == -1 then
+    open, close = '> ', '- '
+  elseif player.dir[2] ==  1 then
+    open, close = ' ^', ' |'
+  elseif player.dir[2] == -1 then
+    open, close = 'v ', '| '
+  end
+
   -- Draw the player.
   ensure_color('player')
   local x = 2 * player.pos[1]
   local y =     player.pos[2]
   cached_cmd('tput cup ' .. y .. ' ' .. x)
   if (math.floor(frame_num / 20)) % 2 == 0 then
-    io.write('|\\')
+    io.write(open)
   else
-    io.write('||')
+    io.write(close)
   end
 end
 
