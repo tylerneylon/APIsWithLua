@@ -570,11 +570,15 @@ function eatyguy.init()
   -- io.stderr:write('init() called\n\n')
 
   -- Set up the baddies.
-  table.insert(baddies, {pos      = {#grid - 2, #grid[1] - 1},
-                         dir      = {-1, 0},
-                         next_dir = {-1, 0},
-                         draw     = 'oo',
-                         color    = 1})
+  baddies = { {color = 1, draw = 'oo', pos = {1, 1} },
+              {color = 2, draw = '@@', pos = {1, 0} },
+              {color = 5, draw = '^^', pos = {0, 1} }}
+  for _, baddy in pairs(baddies) do
+    baddy.dir      = {-1, 0}
+    baddy.next_dir = {-1, 0}
+    baddy.pos = {(#grid - 3) * baddy.pos[1] + 1,
+                 (#grid[1] - 2) * baddy.pos[2] + 1}
+  end
 
   colors = { white   = 1, blue = 2, cyan   = 3, green = 4,
              magenta = 5, red  = 6, yellow = 7, black = 8 }
