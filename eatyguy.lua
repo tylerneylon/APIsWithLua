@@ -41,6 +41,7 @@ local player = {pos      = {1, 1},
                 next_dir = {1, 0}}
 local frame_num = 0
 
+local baddies = {}  -- This will be set up in init.
 
 
 local function str_from_cmd(cmd)
@@ -292,26 +293,28 @@ local function ensure_color(sprite)
   -- Missing entries mean we don't care.
   local fg = {dots = 7, player = 0}
   local bg = {dots = 0, wall = 4, player = 3}
-  --local fg = {dots = 242, player = 0}
-  --local bg = {dots = 0, wall = 27, player = 226}
+  local fg_val, bg_val
 
-  --bg.wall = wcolor
-
-  for name, bg_val in pairs(bg) do
-    if name == sprite then
-      if bg_color ~= bg_val then
-        cached_cmd('tput setab ' .. bg_val)
-        bg_color = bg_val
+  -- Extract {fg,bg}_val from the sprite value.
+  if type(sprite) == 'number' then
+    fg_val, bg_val = 0, sprite
+  else
+    for name, val in pairs(bg) do
+      if name == sprite then
+        fg_val, bg_val = fg[name], val
       end
-      local fg_val = fg[name]
-      if fg_val and fg_color ~= fg_val then
-        cached_cmd('tput setaf ' .. fg_val)
-        fg_color = fg_val
-      end
-      return
     end
   end
-  assert(false)  -- We should have recognized sprite name by now.
+
+  -- Set colors, minimizing work.
+  if bg_color ~= bg_val then
+    cached_cmd('tput setab ' .. bg_val)
+    bg_color = bg_val
+  end
+  if fg_val and fg_color ~= fg_val then
+    cached_cmd('tput setaf ' .. fg_val)
+    fg_color = fg_val
+  end
 end
 
 --[[
@@ -348,10 +351,7 @@ local function can_move_in_dir(character, dir)
   return (grid[gx] and grid[gx][gy]), {gx, gy}
 end
 
-local next_move_time = 0
-local move_delta     = 0.2  -- seconds
-
-local function update_player(elapsed, key)
+local function update_player(elapsed, key, do_move)
 
   --cached_cmd('tput cup ' .. (lines - 1) .. ' 0')
   --io.write(('key = %d'):format(key))
@@ -374,9 +374,7 @@ local function update_player(elapsed, key)
   end
 
   -- Don't move if it's not a move timestamp.
-  if elapsed < next_move_time then return end
-  next_move_time = next_move_time + move_delta
-
+  if not do_move then return end
 
   -- Move in player.dir if possible.
   local can_move, new_pos = can_move_in_dir(player, player.dir)
@@ -403,8 +401,29 @@ local function update_player(elapsed, key)
   player.pos = spaces[dir]
 end
 
+local function update_baddy(elapsed, baddy, do_move)
+  if not do_move then return end
+  baddy.old_pos = baddy.pos
+  local can_move, new_pos = can_move_in_dir(baddy, baddy.dir)
+  if can_move then
+    baddy.pos = new_pos
+  else
+    set_rand_dir(baddy)
+  end
+end
+
+local next_move_time = 0
+local move_delta     = 0.2  -- seconds
+
 local function update(elapsed, key)
-  update_player(elapsed, key)
+  local do_move = (elapsed >= next_move_time)
+  if do_move then
+    next_move_time = next_move_time + move_delta
+  end
+  update_player(elapsed, key, do_move)
+  for _, baddy in pairs(baddies) do
+    update_baddy(elapsed, baddy, do_move)
+  end
 end
 
 local function draw_player(elapsed)
@@ -444,6 +463,27 @@ local function draw_player(elapsed)
   end
 end
 
+-- TODO Try to consolidate with draw_player.
+local function draw_baddy(baddy)
+
+  -- Draw baddy.
+  ensure_color(baddy.color)
+  local x = 2 * baddy.pos[1]
+  local y =     baddy.pos[2]
+  cached_cmd('tput cup ' .. y .. ' ' .. x)
+  io.write(baddy.draw)
+
+  -- Erase old baddy if appropriate.
+  if baddy.old_pos then
+    ensure_color('dots')
+    local x = 2 * baddy.old_pos[1]
+    local y =     baddy.old_pos[2]
+    cached_cmd('tput cup ' .. y .. ' ' .. x)
+    io.write('. ')
+    baddy.old_pos = nil
+  end
+end
+
 local function draw_maze()
   -- XXX
   --wcolor = (wcolor + 1) % 256
@@ -479,6 +519,9 @@ local function draw(elapsed)
 
   --draw_maze()
   draw_player(elapsed)
+  for _, baddy in pairs(baddies) do
+    draw_baddy(baddy)
+  end
 
   if do_animate and not is_animate_done then
     status = drill(1, 1)
@@ -525,6 +568,13 @@ function eatyguy.init()
   math.randomseed(10)
 
   -- io.stderr:write('init() called\n\n')
+
+  -- Set up the baddies.
+  table.insert(baddies, {pos      = {#grid - 2, #grid[1] - 1},
+                         dir      = {-1, 0},
+                         next_dir = {-1, 0},
+                         draw     = 'oo',
+                         color    = 1})
 
   colors = { white   = 1, blue = 2, cyan   = 3, green = 4,
              magenta = 5, red  = 6, yellow = 7, black = 8 }
