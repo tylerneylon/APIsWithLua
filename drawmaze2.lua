@@ -39,7 +39,7 @@ local bg_color = 0  -- Black by default.  -- TODO consider if these are good
 local fg_color = 7  -- White by default.
 
 
-local player = {pos = {1, 1}}
+local player = {pos = {1, 1}, dir = {1, 0}}
 local frame_num = 0
 
 
@@ -291,8 +291,10 @@ local wcolor = 1
 
 local function ensure_color(sprite)
   -- Missing entries mean we don't care.
-  local fg = {dots = 242, player = 0}
-  local bg = {dots = 0, wall = 27, player = 226}
+  local fg = {dots = 7, player = 0}
+  local bg = {dots = 0, wall = 4, player = 3}
+  --local fg = {dots = 242, player = 0}
+  --local bg = {dots = 0, wall = 27, player = 226}
 
   --bg.wall = wcolor
 
@@ -320,12 +322,43 @@ local function maze_pt_from_grid_pt(x, y)
 end
 --]]
 
+-- Set ch.dir to an open direction, and move one step in that direction.
+local function set_rand_dir(ch)
+  -- Find available directions.
+  local dirs = {}
+  local deltas = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}}
+  local p = ch.pos
+  for _, d in pairs(deltas) do
+    local gx, gy = p[1] + d[1], p[2] + d[2]
+    if grid[gx] and grid[gx][gy] then
+      table.insert(dirs, d)
+    end
+  end
+
+  -- Choose a random direction and go that way.
+  local dir = math.random(#dirs)
+  ch.dir = dirs[dir]
+  ch.pos = {p[1] + ch.dir[1], p[2] + ch.dir[2]}
+end
+
 local function update_player()
   -- Only make a change once every 20 frames.
   if frame_num % 10 ~= 0 then return end
 
   -- Save the old position.
   player.old_pos = player.pos
+
+  -- Move in player.dir if possible.
+  local p = player.pos
+  local d = player.dir
+  local gx, gy = p[1] + d[1], p[2] + d[2]
+  if grid[gx] and grid[gx][gy] then
+    player.pos = {gx, gy}
+  else
+    set_rand_dir(player)
+  end
+
+  do return end
 
   -- Find open spaces.
   local spaces = {}
