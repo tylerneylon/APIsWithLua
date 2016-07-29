@@ -274,7 +274,7 @@ local function draw_maze()
         io.write('  ')
       end
     end
-    io.write('\r\n')
+    io.write('\r\n')  -- Move cursor to next row.
   end
   ensure_color('level')
   io.write(('Level: %4d\r\n'):format(level))
@@ -325,7 +325,6 @@ end
 local function eat_dot(pos)
   score = score + 10
   dots_left = dots_left - 1
-  -- TODO consolidate
   cached_cmd('tput cup ' .. (#grid[1] + 2) .. ' 0')
   ensure_color('level')
   io.write(('Score: %4d\r\n'):format(score))
