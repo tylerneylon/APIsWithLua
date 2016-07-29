@@ -103,19 +103,11 @@ local function drill_from(x, y, already_visited)
     consider_nbor(nx, ny, nbors)
   end
 
-  --io.stderr:write(('#nbors = %d\n'):format(#nbors))
-
   -- 2. If we don't have nbors, we're at an endpoint in the depth-first srch.
 
   if #nbors == 0 then return end
 
   -- 3. If we have nbors, choose a random one and drill from there.
-
-  -- TEMP
-  for i, nbor in pairs(nbors) do
-    if already_visited[nbor] then table.remove(nbors, i) end
-    --if math.random(1, 2) == 1 then table.remove(nbors, i) end
-  end
 
   while #nbors > 0 do
     local i = math.random(1, #nbors)
