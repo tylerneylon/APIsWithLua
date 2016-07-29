@@ -23,12 +23,12 @@ local term_clear_str = nil
 local term_home_str
 
 -- maze_grid[x][y] = set of 'x,y' pairs that are adjacent without a wall.
-local maze_grid = nil
+local maze_grid  = nil
 local maze_color = 4
-local grid      = nil  -- grid[x][y] = what's at that spot; falsy == wall.
+local bg_color   = 0  -- Black by default.
+local fg_color   = 7  -- White by default.
+local grid       = nil  -- grid[x][y] = what's at that spot; falsy == wall.
 local grid_w, grid_h = nil, nil
-local bg_color = 0  -- Black by default.
-local fg_color = 7  -- White by default.
 
 
 local player = {pos      = {1, 1},
@@ -36,7 +36,6 @@ local player = {pos      = {1, 1},
                 next_dir = {1, 0},
                 lives    = 3,
                 color    = 'player'}
-local frame_num = 0
 
 local baddies    = {}  -- This will be set up in init.
 local game_state = 'playing'
@@ -61,6 +60,10 @@ local function cached_cmd(cmd)
     term_strs[cmd] = str_from_cmd(cmd)
   end
   io.write(term_strs[cmd])
+end
+
+local function to_xy(x, y)
+  cached_cmd('tput cup ' .. y .. ' ' .. (x + 2))
 end
 
 
@@ -264,7 +267,7 @@ local function erase_pos(p)
   ensure_color('dots')
   local x = 2 * p[1]
   local y =     p[2]
-  cached_cmd('tput cup ' .. y .. ' ' .. x)
+  to_xy(x, y)
   io.write(grid[p[1]][p[2]] .. ' ')
 end
 
@@ -279,6 +282,8 @@ end
 local function draw_maze()
   cached_cmd('tput home')
   for y = 0, grid_h - 1 do
+    ensure_color('dots')
+    io.write('  ')
     for x = 0, grid_w - 1 do
       if grid[x] and grid[x][y] then
         -- Draw dots.
@@ -350,7 +355,7 @@ local function eat_dot(pos)
   score = score + 10
   dots_left = dots_left - 1
   -- TODO consolidate
-  cached_cmd('tput cup ' .. (#grid[1] + 2) .. ' 0')
+  to_xy(0, #grid[1] + 2)
   ensure_color('level')
   io.write(('Score: %4d\r\n'):format(score))
   grid[pos[1]][pos[2]] = ' '
@@ -360,9 +365,6 @@ local function eat_dot(pos)
 end
 
 local function update_player(elapsed, key, do_move)
-
-  --cached_cmd('tput cup ' .. (lines - 1) .. ' 0')
-  --io.write(('key = %d'):format(key))
 
   local p = player.pos
   if grid[p[1]][p[2]] == '.' then eat_dot(p) end
@@ -440,7 +442,7 @@ local function draw_character(c)
   ensure_color(c.color)
   local x = 2 * c.pos[1]
   local y =     c.pos[2]
-  cached_cmd('tput cup ' .. y .. ' ' .. x)
+  to_xy(x, y)
   io.write(c.draw)
 
   -- Erase old character if appropriate.
@@ -547,10 +549,9 @@ function eatyguy.init()
   cols  = num_from_cmd('tput cols')
   lines = num_from_cmd('tput lines')
 
-  -- XXX
-  grid_w = math.floor((cols - 5) / 2)          -- Grid cells are 2 chars.
+  grid_w = math.floor((cols - 3) / 2)          -- Grid cells are 2 chars.
   grid_w = math.ceil(grid_w / 2) * 2 - 1       -- Ensure grid_w is odd.
-  grid_h = math.ceil((lines - 5) / 2) * 2 - 1  -- Ensure grid_h is odd.
+  grid_h = math.ceil((lines - 3) / 2) * 2 - 1  -- Ensure grid_h is odd.
 
   -- Check that grid_w, grid_h are odd.
   assert((grid_w - 1) / 2 == math.floor(grid_w / 2))
@@ -586,7 +587,6 @@ end
 function eatyguy.loop(elapsed, key)
   update(elapsed, key)
   draw(elapsed)
-  frame_num = frame_num + 1
   return game_state, score
 end
 
