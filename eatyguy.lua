@@ -38,10 +38,12 @@ local fg_color = 7  -- White by default.
 
 local player = {pos      = {1, 1},
                 dir      = {1, 0},
-                next_dir = {1, 0}}
+                next_dir = {1, 0},
+                lives    = 3}
 local frame_num = 0
 
 local baddies = {}  -- This will be set up in init.
+local game_state = 'playing'  -- Or 'game over'.
 
 
 local function str_from_cmd(cmd)
@@ -424,6 +426,22 @@ local function update_baddy(elapsed, baddy, do_move)
   end
 end
 
+local function check_for_death()
+  for _, baddy in pairs(baddies) do
+    if player.pos[1] == baddy.pos[1] and
+       player.pos[2] == baddy.pos[2] then
+      player.lives = player.lives - 1
+      if player.lives == 0 then
+        --os.execute('stty cooked')
+        --os.execute('tput reset')
+        --os.exit()
+        game_state = 'game over'
+      end
+      player.pos = {1, 1}
+    end
+  end
+end
+
 local next_move_time = 0
 local move_delta     = 0.2  -- seconds
 
@@ -433,9 +451,11 @@ local function update(elapsed, key)
     next_move_time = next_move_time + move_delta
   end
   update_player(elapsed, key, do_move)
+  check_for_death()  -- Check if the player hit a baddy.
   for _, baddy in pairs(baddies) do
     update_baddy(elapsed, baddy, do_move)
   end
+  check_for_death()  -- Check if a baddy hit the player.
 end
 
 local function draw_player(elapsed)
@@ -604,6 +624,7 @@ function eatyguy.loop(elapsed, key)
   update(elapsed, key)
   draw(elapsed)
   frame_num = frame_num + 1
+  return game_state  -- Either 'playing' or 'game over'.
 end
 
 return eatyguy

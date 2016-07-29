@@ -2,6 +2,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
@@ -50,6 +51,7 @@ lua_State *init() {
 void done() {
   system("stty cooked");
   system("tput reset");
+  printf("Thanks for playing!\n");
   exit(0);
 }
 
@@ -77,7 +79,13 @@ void loop(lua_State *L) {
   // Exit if the user hits esc or the q key.
   if (key == 27 || key == 'q' || key == 'Q') done();
 
-  call(L, "eatyguy", "loop", "di", elapsed, key);
+  char *game_state;
+  call(L, "eatyguy", "loop", "di>s", elapsed, key, &game_state);
+
+  assert(strcmp(game_state, "playing") == 0 ||
+         strcmp(game_state, "game over") == 0);  // XXX
+
+  if (strcmp(game_state, "game over") == 0) done();
 
   struct timespec delay = { .tv_sec = 0, .tv_nsec = 32e6 };  // 32 ms
   nanosleep(&delay, NULL);
