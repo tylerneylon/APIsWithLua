@@ -1,0 +1,2 @@
+-- script.lua
+print('Hi!!!!!')
