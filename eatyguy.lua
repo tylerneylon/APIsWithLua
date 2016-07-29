@@ -256,8 +256,6 @@ local function setup_grid()
   end
 end
 
-local wcolor = 1
-
 local function ensure_color(sprite)
   -- Missing entries mean we don't care.
   local fg = {level = 6, dots = 7, player = 0}
@@ -307,17 +305,6 @@ local function reset_positions(do_erase)
 end
 
 local function draw_maze()
-  -- XXX
-  --wcolor = (wcolor + 1) % 256
-
-  if math.random() < 0.1 then
-    local delta = 1
-    if math.random() < 0.5 then delta = -1 end
-    wcolor = wcolor + delta
-    if wcolor < 242 then wcolor = 242 end
-    if wcolor > 255 then wcolor = 255 end
-  end
-
   cached_cmd('tput home')
   for y = 0, grid_h - 1 do
     for x = 0, grid_w - 1 do
@@ -328,7 +315,6 @@ local function draw_maze()
       else
         -- Draw a wall.
         ensure_color(maze_color)
-        --ensure_color('wall')
         io.write('  ')
       end
     end
@@ -605,11 +591,7 @@ function eatyguy.init()
   term_home_str = str_from_cmd('tput home')
   io.write(term_clear_str)
 
-  -- XXX
   math.randomseed(os.time())
-  --math.randomseed(10)
-
-  -- io.stderr:write('init() called\n\n')
 
   -- Set up the baddies.
   baddies = { {color = 1, draw = 'oo', pos = {1, 1} },
