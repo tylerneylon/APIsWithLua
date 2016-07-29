@@ -104,25 +104,29 @@ local function draw_point(x, y, color, point_char)
   end
 end
 
--- This is a map ('x,y' -> true) for coordintes that we've already visited.
-local already_visited = {}
-
-local function consider_nbor(nx, ny, nbors)
-  if nx > 0 and nx <= w and
-     ny > 0 and ny <= h then
-    xy_str = ('%d,%d'):format(nx, ny)
-    if not already_visited[xy_str] then
-      table.insert(nbors, xy_str)
-    end
-  end
-end
-
 local num_calls_left = 100
 
 -- This edits maze_grid by adding adjacent grid spaces, effectively drilling
 -- through walls. It's like a depth-first search except that we make some random
 -- choices along the way.
-local function drill_from(x, y)
+local function drill_from(x, y, already_visited)
+
+  if already_visited == nil then
+    -- This is a map ('x,y' -> true) for coordintes that we've already visited.
+    already_visited = {}
+  end
+
+  local function consider_nbor(nx, ny, nbors)
+    if nx > 0 and nx <= w and
+       ny > 0 and ny <= h then
+      xy_str = ('%d,%d'):format(nx, ny)
+      if not already_visited[xy_str] then
+        table.insert(nbors, xy_str)
+      end
+    end
+  end
+
+  --io.stderr:write(('drill_from(%d, %d)\n'):format(x, y))
 
   num_calls_left = num_calls_left - 1
 
@@ -150,6 +154,8 @@ local function drill_from(x, y)
     local nx, ny = x, y + dy
     consider_nbor(nx, ny, nbors)
   end
+
+  --io.stderr:write(('#nbors = %d\n'):format(#nbors))
 
   -- 2. If we don't have nbors, we're at an endpoint in the depth-first srch.
 
@@ -180,7 +186,7 @@ local function drill_from(x, y)
     table.insert(maze_grid[x][y], nbor)
     table.insert(maze_grid[nx][ny], xy_str)
     if do_animate then coroutine.yield() end
-    drill_from(nx, ny)
+    drill_from(nx, ny, already_visited)
     table.remove(nbors, i)
 
     -- Method 1.
@@ -224,6 +230,8 @@ end
 
 local function build_maze(w, h)
 
+  --io.stderr:write(('build_maze(%d, %d)\n'):format(w, h))
+
   -- Initialize maze_grid.
   maze_grid = {}
   for x = 1, w do
@@ -259,6 +267,7 @@ local function setup_grid()
   for x = 1, grid_w do
     grid[x] = {}
   end
+  dots_left = 0
 
   -- Convert maze_grid to grid.
   maze_w = #maze_grid
@@ -286,13 +295,19 @@ local function setup_grid()
         local dx, dy = nx - x, ny - y
         local px, py = get_wall_pos(x, y, dx, dy)
         grid[px][py] = false
-        if state == 'open' then grid[px][py] = '.' end
+        if state == 'open' then
+          grid[px][py] = '.'
+          dots_left = dots_left + 1
+        end
       end
       local px, py = get_wall_pos(x, y, 0, 0)
       grid[px][py] = '.'
       dots_left = dots_left + 1
     end
   end
+
+  -- XXX
+  dots_left = 10
 end
 
 local wcolor = 1
@@ -300,7 +315,7 @@ local wcolor = 1
 local function ensure_color(sprite)
   -- Missing entries mean we don't care.
   local fg = {level = 6, dots = 7, player = 0}
-  local bg = {level = 0, dots = 0, player = 3, wall = 4}
+  local bg = {level = 0, dots = 0, player = 3}
   local fg_val, bg_val
 
   -- Extract {fg,bg}_val from the sprite value.
@@ -325,9 +340,68 @@ local function ensure_color(sprite)
   end
 end
 
+local function erase_pos(p)
+  local ch = grid[p[1]][p[2]]
+  -- A former non-wall may change to a wall when we set up a new level.
+  -- In that case, there's no need to erase the old position.
+  if not ch then return end
+  ensure_color('dots')
+  local x = 2 * p[1]
+  local y =     p[2]
+  cached_cmd('tput cup ' .. y .. ' ' .. x)
+  io.write(grid[p[1]][p[2]] .. ' ')
+end
+
+local function reset_positions(do_erase)
+  player.pos = {1, 1}
+  for _, baddy in pairs(baddies) do
+    if do_erase then erase_pos(baddy.pos) end
+    baddy.pos = baddy.home
+  end
+end
+
+local function draw_maze()
+  -- XXX
+  --wcolor = (wcolor + 1) % 256
+
+  if math.random() < 0.1 then
+    local delta = 1
+    if math.random() < 0.5 then delta = -1 end
+    wcolor = wcolor + delta
+    if wcolor < 242 then wcolor = 242 end
+    if wcolor > 255 then wcolor = 255 end
+  end
+
+  cached_cmd('tput home')
+  for y = 0, grid_h - 1 do
+    for x = 0, grid_w - 1 do
+      if grid[x] and grid[x][y] then
+        -- Draw dots.
+        ensure_color('dots')
+        io.write('. ')
+      else
+        -- Draw a wall.
+        ensure_color(maze_color)
+        --ensure_color('wall')
+        io.write('  ')
+      end
+    end
+    io.write('\r\n')
+  end
+  ensure_color('level')
+  io.write(('Level: %4d\r\n'):format(level))
+  io.write(('Score: %4d\r\n'):format(score))
+end
+
 -- TODO consolidate
 local function setup_next_level()
   level = level + 1
+  local maze_colors = {2, 4, 5, 6, 1}
+  maze_color = maze_colors[(level % #maze_colors) + 1]
+  build_maze((grid_w - 1) / 2, (grid_h - 1) / 2)
+  setup_grid()
+  reset_positions()
+  draw_maze()
 end
 
 --[[
@@ -409,7 +483,10 @@ local function update_player(elapsed, key, do_move)
       --erase_pos(new_pos)
       --grid[new_pos[1]][new_pos[2]] == ' '
       if dots_left == 0 then
+        -- XXX
+        --os.exit()
         setup_next_level()
+        return
       end
     end
     --]=]
@@ -457,14 +534,6 @@ local function pos_for_player_life(n)
   return {#grid - 2 * n, #grid[1] + 1}
 end
 
-local function erase_pos(p)
-  ensure_color('dots')
-  local x = 2 * p[1]
-  local y =     p[2]
-  cached_cmd('tput cup ' .. y .. ' ' .. x)
-  io.write(grid[p[1]][p[2]] .. ' ')
-end
-
 local function draw_character(c)
   ensure_color(c.color)
   local x = 2 * c.pos[1]
@@ -491,12 +560,8 @@ local function check_for_death()
       if player.lives == 0 then
         game_state = 'Game over!'
       end
-      player.pos = {1, 1}
       player.color = 'player'
-      for _, baddy in pairs(baddies) do
-        erase_pos(baddy.pos)
-        baddy.pos = baddy.home
-      end
+      reset_positions(true)  -- true --> do_erase
       return true  -- Player did die.
     end
   end
@@ -542,39 +607,6 @@ local function draw_player(elapsed)
   end
 
   draw_character(player)
-end
-
-local function draw_maze()
-  -- XXX
-  --wcolor = (wcolor + 1) % 256
-
-  if math.random() < 0.1 then
-    local delta = 1
-    if math.random() < 0.5 then delta = -1 end
-    wcolor = wcolor + delta
-    if wcolor < 242 then wcolor = 242 end
-    if wcolor > 255 then wcolor = 255 end
-  end
-
-  cached_cmd('tput home')
-  for y = 0, grid_h - 1 do
-    for x = 0, grid_w - 1 do
-      if grid[x] and grid[x][y] then
-        -- Draw dots.
-        ensure_color('dots')
-        io.write('. ')
-      else
-        -- Draw a wall.
-        --ensure_color(maze_color)
-        ensure_color('wall')
-        io.write('  ')
-      end
-    end
-    io.write('\r\n')
-  end
-  ensure_color('level')
-  io.write(('Level: %4d\r\n'):format(level))
-  io.write(('Score: %4d\r\n'):format(score))
 end
 
 local function draw(elapsed)
