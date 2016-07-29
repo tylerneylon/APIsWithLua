@@ -8,7 +8,8 @@ local eatyguy = {}
 
 -- Parameters.
 
-do_use_curses       = true
+local do_shorten_levels = false
+
 do_animate          = false
 is_animate_done     = false
 percent_extra_paths = 30
@@ -61,12 +62,10 @@ end
 local term_color_strs = {}  -- [color_num] -> terminal string
 
 local function set_color(c)
-  if not do_use_curses then return end
   if term_color_strs[c] == nil then
     term_color_strs[c] = str_from_cmd('tput setab ' .. c)
   end
   io.write(term_color_strs[c])
-  --stdscr:attron(curses.color_pair(c))
 end
 
 local term_cup_strs = {}  -- ['x,y'] -> terminal string
@@ -91,10 +90,6 @@ local function cached_cmd(cmd)
 end
 
 local function draw_point(x, y, color, point_char)
-  if not do_use_curses then
-    --print('draw_point(' .. x .. ', ' .. y ..')')
-    return
-  end
   point_char = point_char or ' '  -- Space is the default point_char.
 
   if color then set_color(color) end
@@ -174,44 +169,12 @@ local function drill_from(x, y, already_visited)
     local nbor = nbors[i]
     local nx, ny = nbor:match('(%d+),(%d+)')
     nx, ny = tonumber(nx), tonumber(ny)
-    if not do_use_curses then
-      --print('------')
-      --print(('connecting %s and %s'):format(xy_str, nbor))
-      av_self = already_visited[xy_str]
-      --print(('already_visited[%s] = %s'):format(xy_str, av_self and 'T' or 'F'))
-      av_nbor = already_visited[nbor]
-      --print(('already_visited[%s] = %s'):format(nbor, av_nbor and 'T' or 'F'))
-      --print('')
-    end
     table.insert(maze_grid[x][y], nbor)
     table.insert(maze_grid[nx][ny], xy_str)
     if do_animate then coroutine.yield() end
     drill_from(nx, ny, already_visited)
     table.remove(nbors, i)
 
-    -- Method 1.
-    -- Filter out visited nbors. This method works correctly.
-    --[=[
-    local i = 0
-    while i <= #nbors do
-      if already_visited[nbors[i]] then
-        table.remove(nbors, i)
-      else
-        i = i + 1
-      end
-    end
-    --]=]
-
-    -- Method 2.
-    -- Filter out visited nbors. This method lets some already visited nbors
-    -- through the filter, which results in some holes in the walls.
-    --[[
-    for i, nbor in pairs(nbors) do
-      if already_visited[nbor] then table.remove(nbors, i) end
-    end
-    --]]
-    
-    -- Method 3.
     -- Filter out visited nbors. This method lets some already visited nbors
     -- through the filter, but fewer than method 2.
     local i = 0
@@ -306,8 +269,9 @@ local function setup_grid()
     end
   end
 
-  -- XXX
-  --dots_left = 10
+  if do_shorten_levels then
+    dots_left = 20
+  end
 end
 
 local wcolor = 1
@@ -608,8 +572,7 @@ local function draw_player(elapsed)
 end
 
 local function draw(elapsed)
-  --if do_use_curses then stdscr:erase() end
-  if do_use_curses then io.write(term_home_str) end
+  io.write(term_home_str)
 
   --draw_maze()
   draw_player(elapsed)
@@ -634,7 +597,7 @@ local function draw(elapsed)
   end
   --]]
 
-  if do_use_curses then io.flush() end  -- TODO needed?
+  io.flush() -- TODO needed?
 end
 
 local function num_from_cmd(cmd)
@@ -669,8 +632,8 @@ function eatyguy.init()
   io.write(term_clear_str)
 
   -- XXX
-  --math.randomseed(os.time())
-  math.randomseed(10)
+  math.randomseed(os.time())
+  --math.randomseed(10)
 
   -- io.stderr:write('init() called\n\n')
 
@@ -690,8 +653,6 @@ function eatyguy.init()
              magenta = 5, red  = 6, yellow = 7, black = 8 }
 
   draw_maze()
-
-  if not do_use_curses then return end
 end
 
 function eatyguy.loop(elapsed, key)
