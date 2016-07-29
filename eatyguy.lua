@@ -8,26 +8,19 @@ local eatyguy = {}
 
 -- Parameters.
 
-local do_shorten_levels = false
-
-do_animate          = false
-is_animate_done     = false
-percent_extra_paths = 30
+local do_shorten_levels   = true
+local percent_extra_paths = 30
 
 
 -- Internal globals.
 
-drill = nil  -- TEMP TODO delete
-
-cols  = nil
-lines = nil
-
+local cols  = nil
+local lines = nil
 
 -- Cached term strings.
 
 local term_clear_str = nil
 local term_home_str
-
 
 -- maze_grid[x][y] = set of 'x,y' pairs that are adjacent without a wall.
 local maze_grid = nil
@@ -121,8 +114,6 @@ local function drill_from(x, y, already_visited)
     end
   end
 
-  --io.stderr:write(('drill_from(%d, %d)\n'):format(x, y))
-
   num_calls_left = num_calls_left - 1
 
   -- if num_calls_left <= 0 then return end
@@ -171,7 +162,6 @@ local function drill_from(x, y, already_visited)
     nx, ny = tonumber(nx), tonumber(ny)
     table.insert(maze_grid[x][y], nbor)
     table.insert(maze_grid[nx][ny], xy_str)
-    if do_animate then coroutine.yield() end
     drill_from(nx, ny, already_visited)
     table.remove(nbors, i)
 
@@ -193,8 +183,6 @@ end
 
 local function build_maze(w, h)
 
-  --io.stderr:write(('build_maze(%d, %d)\n'):format(w, h))
-
   -- Initialize maze_grid.
   maze_grid = {}
   for x = 1, w do
@@ -204,15 +192,9 @@ local function build_maze(w, h)
     end
   end
 
-  -- io.stderr:write('maze_grid initialized\n\n')
-
+  -- Drill out paths to make the maze.
   local x, y = math.random(1, w), math.random(1, h)
-
-  if not do_animate then drill_from(x, y) end
-
-  --maze_grid[1][1] = {'2,1', '1,2'}
-
-  -- TODO build maze_grid
+  drill_from(x, y)
 end
 
 -- The input x, y is in the coordinates of maze_grid.
@@ -588,14 +570,6 @@ local function draw(elapsed)
     draw_character(player)
   end
   player.pos = pl_pos
-
-  --[[
-  if do_animate and not is_animate_done then
-    status = drill(1, 1)
-    os.execute('sleep 0.01')
-    if status == 'done' then is_animate_done = true end
-  end
-  --]]
 
   io.flush() -- TODO needed?
 end
