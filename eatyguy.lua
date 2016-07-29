@@ -8,7 +8,8 @@ local eatyguy = {}
 
 -- Parameters.
 
-local do_shorten_levels   = false
+local do_shorten_levels   = false  -- Default is false.
+local can_player_die      = true   -- Default is true.
 local percent_extra_paths = 30
 
 
@@ -17,7 +18,6 @@ local percent_extra_paths = 30
 local cols  = nil
 local lines = nil
 
-
 -- maze_grid[x][y] = set of 'x,y' pairs that are adjacent without a wall.
 local maze_grid  = nil
 local maze_color = 4
@@ -25,14 +25,11 @@ local bg_color   = 0  -- Black by default.
 local fg_color   = 7  -- White by default.
 local grid       = nil  -- grid[x][y] = what's at that spot; falsy == wall.
 local grid_w, grid_h = nil, nil
-
-
 local player = {pos      = {1, 1},
                 dir      = {1, 0},
                 next_dir = {1, 0},
                 lives    = 3,
                 color    = 'player'}
-
 local baddies    = {}  -- This will be set up in init.
 local game_state = 'playing'
 local score      = 0
@@ -60,106 +57,82 @@ local function to_xy(x, y)
   cached_cmd('tput cup ' .. y .. ' ' .. (x + 2))
 end
 
--- This edits maze_grid by adding adjacent grid spaces, effectively drilling
--- through walls. It's like a depth-first search except that we make some random
--- choices along the way.
 local function drill_from(x, y, already_visited)
+
+  -- XXX
+  assert(math.floor((x + 1) / 2) == ((x + 1) / 2))
+  assert(math.floor((y + 1) / 2) == ((y + 1) / 2))
+  assert(x > 0 and x <= grid_w and y > 0 and y <= grid_h)
+
+  -- TODO Is this conditional always true?
+  if not grid[x][y] then
+    grid[x][y] = '.'
+    dots_left = dots_left + 1
+  end
+
+  local function xy_str(x, y)
+    return ('%d,%d'):format(x, y)
+  end
 
   if already_visited == nil then
     -- This is a map ('x,y' -> true) for coordintes that we've already visited.
     already_visited = {}
   end
 
-  local function consider_nbor(nx, ny, nbors)
-    if nx > 0 and nx <= w and
-       ny > 0 and ny <= h then
-      xy_str = ('%d,%d'):format(nx, ny)
-      if not already_visited[xy_str] then
-        table.insert(nbors, xy_str)
+  already_visited[xy_str(x, y)] = true
+
+  local nbors = {}
+
+  local function add_if_new_nbor(x, y)
+    if x > 0 and x <= grid_w and
+       y > 0 and y <= grid_h then
+      if not already_visited[xy_str(x, y)] then
+        table.insert(nbors, {x, y})
       end
     end
   end
 
-  local xy_str = ('%d,%d'):format(x, y)
-  already_visited[xy_str] = true
-
-  x = tonumber(x)
-  y = tonumber(y)
-
-  w = #maze_grid
-  h = #maze_grid[1]
-
   -- 1. Find available neighbors.
-
-  local nbors = {}  -- This will be a list of 'x,y' strings.
-
-  for dx = -1, 1, 2 do
-    local nx, ny = x + dx, y
-    consider_nbor(nx, ny, nbors)
-  end
-
-  for dy = -1, 1, 2 do
-    local nx, ny = x, y + dy
-    consider_nbor(nx, ny, nbors)
+  local deltas = {{-2, 0}, {2, 0}, {0, -2}, {0, 2}}
+  for _, d in pairs(deltas) do
+    add_if_new_nbor(x + d[1], y + d[2])
   end
 
   -- 2. If we don't have nbors, we're at an endpoint in the depth-first srch.
-
   if #nbors == 0 then return end
 
   -- 3. If we have nbors, choose a random one and drill from there.
-
   while #nbors > 0 do
-    local i = math.random(1, #nbors)
-    local nbor = nbors[i]
-    local nx, ny = nbor:match('(%d+),(%d+)')
-    nx, ny = tonumber(nx), tonumber(ny)
-    table.insert(maze_grid[x][y], nbor)
-    table.insert(maze_grid[nx][ny], xy_str)
+    local i      = math.random(1, #nbors)
+    local nx, ny = nbors[i][1], nbors[i][2]
+    local dx, dy = (nx - x) / 2, (ny - y) / 2
+    -- TODO is this conditional always true?
+    if not grid[x + dx][y + dy] then
+      grid[x + dx][y + dy] = '.'
+      dots_left = dots_left + 1
+    end
     drill_from(nx, ny, already_visited)
     table.remove(nbors, i)
 
     -- Filter out visited nbors. This method lets some already visited nbors
     -- through the filter, but fewer than method 2.
-    local i = 0
+    local i = 1
     while i <= #nbors do
-      local is_extra_path_ok = (math.random(1, 100) >= percent_extra_paths)
-      if already_visited[nbors[i]] and is_extra_path_ok then
+      local is_extra_path_ok = (math.random(1, 100) <= percent_extra_paths)
+      --io.stderr:write('#nbors = ' .. (#nbors) .. '\n')  -- XXX
+      --io.stderr:write('i = ' .. i .. '\n')  -- XXX
+      --io.stderr:write('nbors[i] = ' .. tostring(nbors[i]) .. '\n')  -- XXX
+      local nx, ny = nbors[i][1], nbors[i][2]
+      if already_visited[xy_str(nx, ny)] and not is_extra_path_ok then
         table.remove(nbors, i)
       else
         i = i + 1
       end
     end
   end
-
-  return 'done'
 end
 
-local function build_maze(w, h)
-
-  -- Initialize maze_grid.
-  maze_grid = {}
-  for x = 1, w do
-    maze_grid[x] = {}
-    for y = 1, h do
-      maze_grid[x][y] = {}
-    end
-  end
-
-  -- Drill out paths to make the maze.
-  local x, y = math.random(1, w), math.random(1, h)
-  drill_from(x, y)
-end
-
--- The input x, y is in the coordinates of maze_grid.
--- The dx, dy values are expected to both be in {0, 1}.
-local function get_wall_pos(x, y, dx, dy)
-  x = 2 * x + dx - 1
-  y = 2 * y + dy - 1
-  return x, y
-end
-
-local function setup_grid()
+local function build_maze()
 
   -- Set up an empty grid.
   grid = {}
@@ -168,42 +141,21 @@ local function setup_grid()
   end
   dots_left = 0
 
-  -- Convert maze_grid to grid.
-  maze_w = #maze_grid
-  maze_h = #maze_grid[1]
-
-  for x = 1, maze_w do
-    for y = 1, maze_h do
-
-      -- Determine nbor directions which have a wall.
-      local nbors = {[('%d,%d'):format(x + 1, y)]     = 'wall',
-                     [('%d,%d'):format(x + 1, y + 1)] = 'wall',
-                     [('%d,%d'):format(x,     y + 1)] = 'wall'}
-      for _, other in pairs(maze_grid[x][y]) do
-        for nbor in pairs(nbors) do
-          if other == nbor then
-            nbors[nbor] = 'open'
-          end
-        end
-      end
-
-      -- Move data into grid.
-      for nbor, state in pairs(nbors) do
-        -- Parse out the x, y delta.
-        local nx, ny = nbor:match('(%d+),(%d+)')
-        local dx, dy = nx - x, ny - y
-        local px, py = get_wall_pos(x, y, dx, dy)
-        grid[px][py] = false
-        if state == 'open' then
-          grid[px][py] = '.'
-          dots_left = dots_left + 1
-        end
-      end
-      local px, py = get_wall_pos(x, y, 0, 0)
-      grid[px][py] = '.'
-      dots_left = dots_left + 1
+  --[[
+  -- Initialize maze_grid.
+  maze_grid = {}
+  for x = 1, w do
+    maze_grid[x] = {}
+    for y = 1, h do
+      maze_grid[x][y] = {}
     end
   end
+  --]]
+
+  -- Drill out paths to make the maze.
+  local x = math.random((grid_w + 1) / 2) * 2 - 1
+  local y = math.random((grid_h + 1) / 2) * 2 - 1
+  drill_from(x, y)
 
   if do_shorten_levels then
     dots_left = 20
@@ -260,10 +212,10 @@ end
 
 local function draw_maze()
   cached_cmd('tput home')
-  for y = 0, grid_h - 1 do
+  for y = 0, grid_h + 1 do
     ensure_color('dots')
     io.write('  ')
-    for x = 0, grid_w - 1 do
+    for x = 0, grid_w + 1 do
       if grid[x] and grid[x][y] then
         -- Draw dots.
         ensure_color('dots')
@@ -286,8 +238,8 @@ local function setup_next_level()
   score = score + 1000
   local maze_colors = {2, 4, 5, 6, 1}
   maze_color = maze_colors[(level % #maze_colors) + 1]
-  build_maze((grid_w - 1) / 2, (grid_h - 1) / 2)
-  setup_grid()
+  build_maze()
+  --setup_grid()
   reset_positions()
   draw_maze()
 end
@@ -325,7 +277,7 @@ end
 local function eat_dot(pos)
   score = score + 10
   dots_left = dots_left - 1
-  cached_cmd('tput cup ' .. (#grid[1] + 2) .. ' 0')
+  cached_cmd('tput cup ' .. (grid_h + 3) .. ' 0')
   ensure_color('level')
   io.write(('Score: %4d\r\n'):format(score))
   grid[pos[1]][pos[2]] = ' '
@@ -388,7 +340,7 @@ local function update_baddy(elapsed, baddy, do_move)
 end
 
 local function pos_for_player_life(n)
-  return {#grid - 2 * n, #grid[1] + 1}
+  return {grid_w - 2 * n, grid_h + 2}
 end
 
 local function draw_character(c)
@@ -406,6 +358,7 @@ local function draw_character(c)
 end
 
 local function check_for_death()
+  if not can_player_die then return end
   for _, baddy in pairs(baddies) do
     if player.pos[1] == baddy.pos[1] and
        player.pos[2] == baddy.pos[2] then
@@ -495,9 +448,23 @@ function eatyguy.init()
   cols  = tonumber(str_from_cmd('tput cols'))
   lines = tonumber(str_from_cmd('tput lines'))
 
-  grid_w = math.floor((cols - 3) / 2)          -- Grid cells are 2 chars.
+  --[[
+  grid_w = math.floor((cols - 7) / 2)          -- Grid cells are 2 chars.
   grid_w = math.ceil(grid_w / 2) * 2 - 1       -- Ensure grid_w is odd.
-  grid_h = math.ceil((lines - 3) / 2) * 2 - 1  -- Ensure grid_h is odd.
+  grid_w = grid_w - 2
+  grid_h = math.ceil((lines - 7) / 2) * 2 - 1  -- Ensure grid_h is odd.
+  grid_h = grid_h - 2
+  --]]
+  
+  grid_w = math.floor((cols - 1) / 2)          -- Grid cells are 2 chars.
+  grid_h = lines - 1                           -- Avoid the last col/line.
+
+  grid_w = grid_w - 3    -- Allow room for the border + left margin.
+  grid_h = grid_h - 4    -- Allow room for the border + score / level.
+
+  grid_w = math.ceil(grid_w / 2) * 2 - 1       -- Ensure both are odd.
+  grid_h = math.ceil(grid_h / 2) * 2 - 1
+
 
   -- Set up the baddies.
   baddies = { {color = 1, draw = 'oo', pos = {1, 1} },
