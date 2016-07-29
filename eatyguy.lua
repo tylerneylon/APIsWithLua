@@ -46,6 +46,7 @@ local frame_num = 0
 local baddies    = {}  -- This will be set up in init.
 local game_state = 'playing'
 local score      = 0
+local level      = 1
 
 
 local function str_from_cmd(cmd)
@@ -295,8 +296,8 @@ local wcolor = 1
 
 local function ensure_color(sprite)
   -- Missing entries mean we don't care.
-  local fg = {dots = 7, player = 0}
-  local bg = {dots = 0, wall = 4, player = 3}
+  local fg = {level = 6, dots = 7, player = 0}
+  local bg = {level = 0, dots = 0, player = 3, wall = 4}
   local fg_val, bg_val
 
   -- Extract {fg,bg}_val from the sprite value.
@@ -468,7 +469,7 @@ local function check_for_death()
       player.draw = '  '
       draw_character(player)
       if player.lives == 0 then
-        game_state = ('Game over! Final score: %d'):format(score)
+        game_state = 'Game over!'
       end
       player.pos = {1, 1}
       player.color = 'player'
@@ -550,6 +551,9 @@ local function draw_maze()
     end
     io.write('\r\n')
   end
+  ensure_color('level')
+  io.write(('Level: %4d\r\n'):format(level))
+  io.write(('Score: %4d\r\n'):format(score))
 end
 
 local function draw(elapsed)
@@ -643,7 +647,7 @@ function eatyguy.loop(elapsed, key)
   update(elapsed, key)
   draw(elapsed)
   frame_num = frame_num + 1
-  return game_state
+  return game_state, score
 end
 
 return eatyguy
