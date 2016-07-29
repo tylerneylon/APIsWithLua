@@ -48,10 +48,10 @@ lua_State *init() {
   return L;
 }
 
-void done() {
+void done(char *msg) {
   system("stty cooked");
   system("tput reset");
-  printf("Thanks for playing!\n");
+  printf("%s\n", msg);
   exit(0);
 }
 
@@ -77,15 +77,12 @@ void loop(lua_State *L) {
   double elapsed = gettime() - start;
 
   // Exit if the user hits esc or the q key.
-  if (key == 27 || key == 'q' || key == 'Q') done();
+  if (key == 27 || key == 'q' || key == 'Q') done("goodbye!");
 
   char *game_state;
   call(L, "eatyguy", "loop", "di>s", elapsed, key, &game_state);
 
-  assert(strcmp(game_state, "playing") == 0 ||
-         strcmp(game_state, "game over") == 0);  // XXX
-
-  if (strcmp(game_state, "game over") == 0) done();
+  if (strcmp(game_state, "playing") != 0) done(game_state);
 
   struct timespec delay = { .tv_sec = 0, .tv_nsec = 32e6 };  // 32 ms
   nanosleep(&delay, NULL);
