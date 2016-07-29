@@ -307,7 +307,7 @@ local function setup_grid()
   end
 
   -- XXX
-  dots_left = 10
+  --dots_left = 10
 end
 
 local wcolor = 1
@@ -396,6 +396,7 @@ end
 -- TODO consolidate
 local function setup_next_level()
   level = level + 1
+  score = score + 1000
   local maze_colors = {2, 4, 5, 6, 1}
   maze_color = maze_colors[(level % #maze_colors) + 1]
   build_maze((grid_w - 1) / 2, (grid_h - 1) / 2)
