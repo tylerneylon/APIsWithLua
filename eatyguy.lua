@@ -39,7 +39,8 @@ local fg_color = 7  -- White by default.
 local player = {pos      = {1, 1},
                 dir      = {1, 0},
                 next_dir = {1, 0},
-                lives    = 3}
+                lives    = 3,
+                color    = 'player'}
 local frame_num = 0
 
 local baddies = {}  -- This will be set up in init.
@@ -458,7 +459,26 @@ local function update(elapsed, key)
   check_for_death()  -- Check if a baddy hit the player.
 end
 
+local function draw_character(c)
+  ensure_color(c.color)
+  local x = 2 * c.pos[1]
+  local y =     c.pos[2]
+  cached_cmd('tput cup ' .. y .. ' ' .. x)
+  io.write(c.draw)
+
+  -- Erase old character if appropriate.
+  if c.old_pos then
+    ensure_color('dots')
+    local x = 2 * c.old_pos[1]
+    local y =     c.old_pos[2]
+    cached_cmd('tput cup ' .. y .. ' ' .. x)
+    io.write('. ')
+    c.old_pos = nil
+  end
+end
+
 local function draw_player(elapsed)
+
   -- Set up player-drawing data.
   local open, close = "'<", "'-"
   if     player.dir[1] ==  1 then
@@ -471,49 +491,15 @@ local function draw_player(elapsed)
     open, close = "v.", "'."
   end
 
-  -- Draw the player.
-  ensure_color('player')
-  local x = 2 * player.pos[1]
-  local y =     player.pos[2]
-  cached_cmd('tput cup ' .. y .. ' ' .. x)
+  -- Choose the sprite.
   local anim_timestep = 0.2
   if math.floor(elapsed / anim_timestep) % 2 == 0 then
-  --if (math.floor(frame_num / 20)) % 2 == 0 then
-    io.write(open)
+    player.draw = open
   else
-    io.write(close)
+    player.draw = close
   end
 
-  -- Erase old player if appropriate.
-  if player.old_pos then
-    ensure_color('dots')
-    local x = 2 * player.old_pos[1]
-    local y =     player.old_pos[2]
-    cached_cmd('tput cup ' .. y .. ' ' .. x)
-    io.write('. ')
-    player.old_pos = nil
-  end
-end
-
--- TODO Try to consolidate with draw_player.
-local function draw_baddy(baddy)
-
-  -- Draw baddy.
-  ensure_color(baddy.color)
-  local x = 2 * baddy.pos[1]
-  local y =     baddy.pos[2]
-  cached_cmd('tput cup ' .. y .. ' ' .. x)
-  io.write(baddy.draw)
-
-  -- Erase old baddy if appropriate.
-  if baddy.old_pos then
-    ensure_color('dots')
-    local x = 2 * baddy.old_pos[1]
-    local y =     baddy.old_pos[2]
-    cached_cmd('tput cup ' .. y .. ' ' .. x)
-    io.write('. ')
-    baddy.old_pos = nil
-  end
+  draw_character(player)
 end
 
 local function draw_maze()
@@ -552,7 +538,7 @@ local function draw(elapsed)
   --draw_maze()
   draw_player(elapsed)
   for _, baddy in pairs(baddies) do
-    draw_baddy(baddy)
+    draw_character(baddy)
   end
 
   if do_animate and not is_animate_done then
