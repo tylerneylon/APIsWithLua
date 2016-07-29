@@ -427,36 +427,16 @@ local function update_baddy(elapsed, baddy, do_move)
   end
 end
 
-local function check_for_death()
-  for _, baddy in pairs(baddies) do
-    if player.pos[1] == baddy.pos[1] and
-       player.pos[2] == baddy.pos[2] then
-      player.lives = player.lives - 1
-      if player.lives == 0 then
-        --os.execute('stty cooked')
-        --os.execute('tput reset')
-        --os.exit()
-        game_state = 'game over'
-      end
-      player.pos = {1, 1}
-    end
-  end
+local function pos_for_player_life(n)
+  return {#grid - 2 * n, #grid[1] + 1}
 end
 
-local next_move_time = 0
-local move_delta     = 0.2  -- seconds
-
-local function update(elapsed, key)
-  local do_move = (elapsed >= next_move_time)
-  if do_move then
-    next_move_time = next_move_time + move_delta
-  end
-  update_player(elapsed, key, do_move)
-  check_for_death()  -- Check if the player hit a baddy.
-  for _, baddy in pairs(baddies) do
-    update_baddy(elapsed, baddy, do_move)
-  end
-  check_for_death()  -- Check if a baddy hit the player.
+local function erase_character(c)
+  ensure_color('dots')
+  local x = 2 * c.pos[1]
+  local y =     c.pos[2]
+  cached_cmd('tput cup ' .. y .. ' ' .. x)
+  io.write('. ')
 end
 
 local function draw_character(c)
@@ -475,6 +455,46 @@ local function draw_character(c)
     io.write('. ')
     c.old_pos = nil
   end
+end
+
+local function check_for_death()
+  for _, baddy in pairs(baddies) do
+    if player.pos[1] == baddy.pos[1] and
+       player.pos[2] == baddy.pos[2] then
+      player.lives = player.lives - 1
+      player.color = 'dots'
+      player.pos = pos_for_player_life(player.lives)
+      player.draw = '  '
+      draw_character(player)
+      if player.lives == 0 then
+        game_state = 'game over'
+      end
+      player.pos = {1, 1}
+      player.color = 'player'
+      for _, baddy in pairs(baddies) do
+        erase_character(baddy)
+        baddy.pos = baddy.home
+      end
+      return true  -- Player did die.
+    end
+  end
+  return false  -- Player survived .. for now.
+end
+
+local next_move_time = 0
+local move_delta     = 0.2  -- seconds
+
+local function update(elapsed, key)
+  local do_move = (elapsed >= next_move_time)
+  if do_move then
+    next_move_time = next_move_time + move_delta
+  end
+  update_player(elapsed, key, do_move)
+  check_for_death()
+  for _, baddy in pairs(baddies) do
+    update_baddy(elapsed, baddy, do_move)
+  end
+  check_for_death()  -- Check if a baddy hit the player.
 end
 
 local function draw_player(elapsed)
@@ -541,11 +561,22 @@ local function draw(elapsed)
     draw_character(baddy)
   end
 
+  -- Draw lives remaining.
+  local pl_pos = player.pos
+  player.draw = "'<"
+  for i = 1, player.lives - 1 do
+    player.pos = pos_for_player_life(i)
+    draw_character(player)
+  end
+  player.pos = pl_pos
+
+  --[[
   if do_animate and not is_animate_done then
     status = drill(1, 1)
     os.execute('sleep 0.01')
     if status == 'done' then is_animate_done = true end
   end
+  --]]
 
   if do_use_curses then io.flush() end  -- TODO needed?
 end
@@ -596,6 +627,7 @@ function eatyguy.init()
     baddy.next_dir = {-1, 0}
     baddy.pos = {(#grid - 3) * baddy.pos[1] + 1,
                  (#grid[1] - 2) * baddy.pos[2] + 1}
+    baddy.home = baddy.pos
   end
 
   colors = { white   = 1, blue = 2, cyan   = 3, green = 4,
