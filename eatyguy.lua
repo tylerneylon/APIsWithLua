@@ -8,7 +8,7 @@ local eatyguy = {}
 
 -- Parameters.
 
-local do_shorten_levels   = true
+local do_shorten_levels   = false
 local percent_extra_paths = 30
 
 
@@ -281,7 +281,6 @@ local function draw_maze()
   io.write(('Score: %4d\r\n'):format(score))
 end
 
--- TODO consolidate
 local function setup_next_level()
   level = level + 1
   score = score + 1000
@@ -292,13 +291,6 @@ local function setup_next_level()
   reset_positions()
   draw_maze()
 end
-
---[[
-local function maze_pt_from_grid_pt(x, y)
-  -- Map 1 -> 1; 3 -> 2, etc.
-  x = (x - 1)
-end
---]]
 
 -- Set ch.dir to an open direction, and move one step in that direction.
 local function set_rand_dir(ch)
@@ -334,7 +326,7 @@ local function eat_dot(pos)
   score = score + 10
   dots_left = dots_left - 1
   -- TODO consolidate
-  to_xy(0, #grid[1] + 2)
+  cached_cmd('tput cup ' .. (#grid[1] + 2) .. ' 0')
   ensure_color('level')
   io.write(('Score: %4d\r\n'):format(score))
   grid[pos[1]][pos[2]] = ' '
@@ -374,23 +366,6 @@ local function update_player(elapsed, key, do_move)
     player.old_pos = player.pos  -- Save the old position.
     player.pos = new_pos
   end
-
-  do return end
-
-  -- Find open spaces.
-  local spaces = {}
-  local deltas = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}}
-  local p = player.pos
-  for _, d in pairs(deltas) do
-    local gx, gy = p[1] + d[1], p[2] + d[2]
-    if grid[gx] and grid[gx][gy] then
-      table.insert(spaces, {gx, gy})
-    end
-  end
-
-  -- Choose a random direction and go that way.
-  local dir = math.random(#spaces)
-  player.pos = spaces[dir]
 end
 
 local function set_random_next_dir(character)
@@ -525,17 +500,6 @@ function eatyguy.init()
   grid_w = math.ceil(grid_w / 2) * 2 - 1       -- Ensure grid_w is odd.
   grid_h = math.ceil((lines - 3) / 2) * 2 - 1  -- Ensure grid_h is odd.
 
-  -- Check that grid_w, grid_h are odd.
-  assert((grid_w - 1) / 2 == math.floor(grid_w / 2))
-  assert((grid_h - 1) / 2 == math.floor(grid_h / 2))
-
-  build_maze((grid_w - 1) / 2, (grid_h - 1) / 2)
-  setup_grid()
-
-  cached_cmd('tput clear')
-
-  math.randomseed(os.time())
-
   -- Set up the baddies.
   baddies = { {color = 1, draw = 'oo', pos = {1, 1} },
               {color = 2, draw = '@@', pos = {1, 0} },
@@ -543,15 +507,15 @@ function eatyguy.init()
   for _, baddy in pairs(baddies) do
     baddy.dir      = {-1, 0}
     baddy.next_dir = {-1, 0}
-    baddy.pos = {(#grid - 3) * baddy.pos[1] + 1,
-                 (#grid[1] - 2) * baddy.pos[2] + 1}
+    baddy.pos = {(grid_w - 3) * baddy.pos[1] + 1,
+                 (grid_h - 2) * baddy.pos[2] + 1}
     baddy.home = baddy.pos
   end
 
-  colors = { white   = 1, blue = 2, cyan   = 3, green = 4,
-             magenta = 5, red  = 6, yellow = 7, black = 8 }
-
-  draw_maze()
+  math.randomseed(os.time())
+  level = 0  -- This will be incremented by setup_next_level().
+  setup_next_level()
+  score = 0
 end
 
 function eatyguy.loop(elapsed, key)
