@@ -57,6 +57,7 @@ void loop(lua_State *L) {
   char *game_state;
   call(L, "eatyguy", "loop", "di>si", elapsed, key, &game_state, &score);
   if (strcmp(game_state, "playing") != 0) done(game_state, score);
+  free(game_state);
   tinysleep(0.032);  // 32 ms
 }
 

@@ -8,7 +8,7 @@ local eatyguy = {}
 
 -- Parameters.
 
-local do_shorten_levels   = false  -- Default is false.
+local do_shorten_levels   = true  -- Default is false.
 local can_player_die      = true   -- Default is true.
 local percent_extra_paths = 30
 
@@ -59,69 +59,52 @@ end
 
 local function drill_from(x, y, already_visited)
 
-  -- XXX
-  assert(math.floor((x + 1) / 2) == ((x + 1) / 2))
-  assert(math.floor((y + 1) / 2) == ((y + 1) / 2))
-  assert(x > 0 and x <= grid_w and y > 0 and y <= grid_h)
+  -- 1. Set up supporting functions and data.
+  local function xy_str(x, y)
+    return ('%d,%d'):format(x, y)
+  end
+  if already_visited == nil then
+    -- This is a map ('x,y' -> true) for coordinates that we've already visited.
+    already_visited = {}
+  end
 
-  -- TODO Is this conditional always true?
+  -- 2. Register this point as visited and not a wall.
   if not grid[x][y] then
     grid[x][y] = '.'
     dots_left = dots_left + 1
   end
-
-  local function xy_str(x, y)
-    return ('%d,%d'):format(x, y)
-  end
-
-  if already_visited == nil then
-    -- This is a map ('x,y' -> true) for coordintes that we've already visited.
-    already_visited = {}
-  end
-
   already_visited[xy_str(x, y)] = true
 
+  -- 3. Find available neighbors.
   local nbors = {}
-
-  local function add_if_new_nbor(x, y)
-    if x > 0 and x <= grid_w and
-       y > 0 and y <= grid_h then
-      if not already_visited[xy_str(x, y)] then
-        table.insert(nbors, {x, y})
-      end
+  local deltas = {{-2, 0}, {2, 0}, {0, -2}, {0, 2}}
+  for _, d in pairs(deltas) do
+    local nx, ny = x + d[1], y + d[2]
+    if nx > 0 and nx <= grid_w and
+       ny > 0 and ny <= grid_h and
+       not already_visited[xy_str(nx, ny)] then
+        table.insert(nbors, {nx, ny})
     end
   end
 
-  -- 1. Find available neighbors.
-  local deltas = {{-2, 0}, {2, 0}, {0, -2}, {0, 2}}
-  for _, d in pairs(deltas) do
-    add_if_new_nbor(x + d[1], y + d[2])
-  end
-
-  -- 2. If we don't have nbors, we're at an endpoint in the depth-first srch.
+  -- 4. If we don't have nbors, we're at an endpoint in the depth-first srch.
   if #nbors == 0 then return end
 
-  -- 3. If we have nbors, choose a random one and drill from there.
+  -- 5. If we have nbors, choose a random one and drill from there.
   while #nbors > 0 do
     local i      = math.random(1, #nbors)
     local nx, ny = nbors[i][1], nbors[i][2]
     local dx, dy = (nx - x) / 2, (ny - y) / 2
-    -- TODO is this conditional always true?
-    if not grid[x + dx][y + dy] then
-      grid[x + dx][y + dy] = '.'
-      dots_left = dots_left + 1
-    end
+    grid[x + dx][y + dy] = '.'  -- This will always be a wall until now.
+    dots_left = dots_left + 1
     drill_from(nx, ny, already_visited)
     table.remove(nbors, i)
 
     -- Filter out visited nbors. This method lets some already visited nbors
-    -- through the filter, but fewer than method 2.
+    -- through the filter to add more paths to the maze.
     local i = 1
     while i <= #nbors do
       local is_extra_path_ok = (math.random(1, 100) <= percent_extra_paths)
-      --io.stderr:write('#nbors = ' .. (#nbors) .. '\n')  -- XXX
-      --io.stderr:write('i = ' .. i .. '\n')  -- XXX
-      --io.stderr:write('nbors[i] = ' .. tostring(nbors[i]) .. '\n')  -- XXX
       local nx, ny = nbors[i][1], nbors[i][2]
       if already_visited[xy_str(nx, ny)] and not is_extra_path_ok then
         table.remove(nbors, i)
@@ -141,22 +124,12 @@ local function build_maze()
   end
   dots_left = 0
 
-  --[[
-  -- Initialize maze_grid.
-  maze_grid = {}
-  for x = 1, w do
-    maze_grid[x] = {}
-    for y = 1, h do
-      maze_grid[x][y] = {}
-    end
-  end
-  --]]
-
   -- Drill out paths to make the maze.
   local x = math.random((grid_w + 1) / 2) * 2 - 1
   local y = math.random((grid_h + 1) / 2) * 2 - 1
   drill_from(x, y)
 
+  -- Support for easier debugging.
   if do_shorten_levels then
     dots_left = 20
   end
@@ -448,14 +421,6 @@ function eatyguy.init()
   cols  = tonumber(str_from_cmd('tput cols'))
   lines = tonumber(str_from_cmd('tput lines'))
 
-  --[[
-  grid_w = math.floor((cols - 7) / 2)          -- Grid cells are 2 chars.
-  grid_w = math.ceil(grid_w / 2) * 2 - 1       -- Ensure grid_w is odd.
-  grid_w = grid_w - 2
-  grid_h = math.ceil((lines - 7) / 2) * 2 - 1  -- Ensure grid_h is odd.
-  grid_h = grid_h - 2
-  --]]
-  
   grid_w = math.floor((cols - 1) / 2)          -- Grid cells are 2 chars.
   grid_h = lines - 1                           -- Avoid the last col/line.
 
@@ -464,7 +429,6 @@ function eatyguy.init()
 
   grid_w = math.ceil(grid_w / 2) * 2 - 1       -- Ensure both are odd.
   grid_h = math.ceil(grid_h / 2) * 2 - 1
-
 
   -- Set up the baddies.
   baddies = { {color = 1, draw = 'oo', pos = {1, 1} },
