@@ -1,17 +1,13 @@
-#include <assert.h>
 #include <fcntl.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/time.h>
-#include <time.h>
 #include <unistd.h>
 
 #include "lauxlib.h"
 #include "lua.h"
 #include "lualib.h"
 
-#include "clua.h"
+#include "util.h"
 
 
 // Globals.
@@ -22,72 +18,46 @@ static int    score = 0;
 
 // Functions.
 
-double gettime() {
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  return tv.tv_sec + 1e-6 * tv.tv_usec;
-}
-
 lua_State *init() {
 
   // Initialize the terminal state for drawing an input.
   system("stty raw");
   fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL) | O_NONBLOCK);
 
-  // Set up our timer.
-  start = gettime();
+  start = gettime();               // Set up our timer.
 
-  // Set up the Lua state and load eatyguy.lua.
-  lua_State *L = luaL_newstate();
+  lua_State *L = luaL_newstate();  // Set up the Lua state.
   luaL_openlibs(L);
+
+  // These two lines are like this Lua statement: eatyguy = require 'eatyguy'
   luaL_dofile(L, "eatyguy.lua");
-  // The Lua stack now has the return values from the script.
   lua_setglobal(L, "eatyguy");
-  lua_settop(L, 0);  // Clear the stack.
-  call(L, "eatyguy", "init", "");
+  lua_settop(L, 0);                // Clear the stack.
+  call(L, "eatyguy", "init", "");  // Call eatyguy.init().
 
   return L;
 }
 
 void done(char *msg, int score) {
-  system("stty cooked");
-  system("tput reset");
+  system("stty cooked");  // Restore terminal input and echo settings.
+  system("tput reset");   // Restore terminal colors and clear screen.
   printf("%s\n", msg);
   printf("Final score: %d\n", score);
   exit(0);
 }
 
-int getkey() {
-
-  // We care about two cases:
-  // Case 1: A sequence of the form 27, 91, X; return X.
-  // Case 2: For any other sequence, return each int separately.
-
-  int ch = getchar();
-  if (ch == 27) {
-    int next = getchar();
-    if (next == 91) return getchar();
-    // If we get here, then we're not in a 27, 91, X sequence.
-    ungetc(next, stdin);
-  }
-  return ch;
-}
-
 void loop(lua_State *L) {
-
   int    key     = getkey();
   double elapsed = gettime() - start;
 
   // Exit if the user hits esc or the q key.
   if (key == 27 || key == 'q' || key == 'Q') done("Goodbye!", score);
 
+  // Execute one game loop and pause for 32 ms.
   char *game_state;
   call(L, "eatyguy", "loop", "di>si", elapsed, key, &game_state, &score);
-
   if (strcmp(game_state, "playing") != 0) done(game_state, score);
-
-  struct timespec delay = { .tv_sec = 0, .tv_nsec = 32e6 };  // 32 ms
-  nanosleep(&delay, NULL);
+  tinysleep(0.032);  // 32 ms
 }
 
 
