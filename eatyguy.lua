@@ -27,7 +27,7 @@ local maze_grid = nil
 local maze_color = 4
 local grid      = nil  -- grid[x][y] = what's at that spot; falsy == wall.
 local grid_w, grid_h = nil, nil
-local bg_color = 0  -- Black by default.  -- TODO consider if these are good
+local bg_color = 0  -- Black by default.
 local fg_color = 7  -- White by default.
 
 
@@ -52,25 +52,6 @@ local function str_from_cmd(cmd)
   return s
 end
 
-local term_color_strs = {}  -- [color_num] -> terminal string
-
-local function set_color(c)
-  if term_color_strs[c] == nil then
-    term_color_strs[c] = str_from_cmd('tput setab ' .. c)
-  end
-  io.write(term_color_strs[c])
-end
-
-local term_cup_strs = {}  -- ['x,y'] -> terminal string
-
-local function draw_char_at_pt(y, x, ch)
-  local xy_str = ('%d,%d'):format(x, y)
-  if term_cup_strs[xy_str] == nil then
-    term_cup_strs[xy_str] = str_from_cmd('tput cup ' .. y .. ' ' .. x)
-  end
-  io.write(term_cup_strs[xy_str] .. ' ')
-end
-
 -- TODO Consolidate tput calls into this.
 
 local term_strs = {}  -- Maps cmd -> str.
@@ -82,15 +63,6 @@ local function cached_cmd(cmd)
   io.write(term_strs[cmd])
 end
 
-local function draw_point(x, y, color, point_char)
-  point_char = point_char or ' '  -- Space is the default point_char.
-
-  if color then set_color(color) end
-  for i = 0, 1 do
-    --stdscr:mvaddstr(y, 2 * x + i, point_char)
-    draw_char_at_pt(y, 2 * x + i, point_char)
-  end
-end
 
 local num_calls_left = 100
 
