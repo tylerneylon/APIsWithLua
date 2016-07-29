@@ -30,6 +30,7 @@ local term_home_str
 
 -- maze_grid[x][y] = set of 'x,y' pairs that are adjacent without a wall.
 local maze_grid = nil
+local maze_color = 4
 local grid      = nil  -- grid[x][y] = what's at that spot; falsy == wall.
 local grid_w, grid_h = nil, nil
 local bg_color = 0  -- Black by default.  -- TODO consider if these are good
@@ -47,6 +48,7 @@ local baddies    = {}  -- This will be set up in init.
 local game_state = 'playing'
 local score      = 0
 local level      = 1
+local dots_left  = 0
 
 
 local function str_from_cmd(cmd)
@@ -288,6 +290,7 @@ local function setup_grid()
       end
       local px, py = get_wall_pos(x, y, 0, 0)
       grid[px][py] = '.'
+      dots_left = dots_left + 1
     end
   end
 end
@@ -320,6 +323,11 @@ local function ensure_color(sprite)
     cached_cmd('tput setaf ' .. fg_val)
     fg_color = fg_val
   end
+end
+
+-- TODO consolidate
+local function setup_next_level()
+  level = level + 1
 end
 
 --[[
@@ -389,6 +397,22 @@ local function update_player(elapsed, key, do_move)
   if can_move then
     player.old_pos = player.pos  -- Save the old position.
     player.pos = new_pos
+    ---[=[
+    if grid[new_pos[1]][new_pos[2]] == '.' then
+      score = score + 10
+      dots_left = dots_left - 1
+      -- TODO consolidate
+      cached_cmd('tput cup ' .. (#grid[1] + 2) .. ' 0')
+      ensure_color('level')
+      io.write(('Score: %4d\r\n'):format(score))
+      grid[new_pos[1]][new_pos[2]] = ' '
+      --erase_pos(new_pos)
+      --grid[new_pos[1]][new_pos[2]] == ' '
+      if dots_left == 0 then
+        setup_next_level()
+      end
+    end
+    --]=]
   end
 
   do return end
@@ -433,12 +457,12 @@ local function pos_for_player_life(n)
   return {#grid - 2 * n, #grid[1] + 1}
 end
 
-local function erase_character(c)
+local function erase_pos(p)
   ensure_color('dots')
-  local x = 2 * c.pos[1]
-  local y =     c.pos[2]
+  local x = 2 * p[1]
+  local y =     p[2]
   cached_cmd('tput cup ' .. y .. ' ' .. x)
-  io.write('. ')
+  io.write(grid[p[1]][p[2]] .. ' ')
 end
 
 local function draw_character(c)
@@ -450,11 +474,7 @@ local function draw_character(c)
 
   -- Erase old character if appropriate.
   if c.old_pos then
-    ensure_color('dots')
-    local x = 2 * c.old_pos[1]
-    local y =     c.old_pos[2]
-    cached_cmd('tput cup ' .. y .. ' ' .. x)
-    io.write('. ')
+    erase_pos(c.old_pos)
     c.old_pos = nil
   end
 end
@@ -474,7 +494,7 @@ local function check_for_death()
       player.pos = {1, 1}
       player.color = 'player'
       for _, baddy in pairs(baddies) do
-        erase_character(baddy)
+        erase_pos(baddy.pos)
         baddy.pos = baddy.home
       end
       return true  -- Player did die.
@@ -545,6 +565,7 @@ local function draw_maze()
         io.write('. ')
       else
         -- Draw a wall.
+        --ensure_color(maze_color)
         ensure_color('wall')
         io.write('  ')
       end
