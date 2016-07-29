@@ -441,10 +441,26 @@ local function can_move_in_dir(character, dir)
   return (grid[gx] and grid[gx][gy]), {gx, gy}
 end
 
+local function eat_dot(pos)
+  score = score + 10
+  dots_left = dots_left - 1
+  -- TODO consolidate
+  cached_cmd('tput cup ' .. (#grid[1] + 2) .. ' 0')
+  ensure_color('level')
+  io.write(('Score: %4d\r\n'):format(score))
+  grid[pos[1]][pos[2]] = ' '
+  if dots_left == 0 then
+    setup_next_level()
+  end
+end
+
 local function update_player(elapsed, key, do_move)
 
   --cached_cmd('tput cup ' .. (lines - 1) .. ' 0')
   --io.write(('key = %d'):format(key))
+
+  local p = player.pos
+  if grid[p[1]][p[2]] == '.' then eat_dot(p) end
 
   -- Update our direction if we have a known key.
   local dir_by_key = {
@@ -471,25 +487,6 @@ local function update_player(elapsed, key, do_move)
   if can_move then
     player.old_pos = player.pos  -- Save the old position.
     player.pos = new_pos
-    ---[=[
-    if grid[new_pos[1]][new_pos[2]] == '.' then
-      score = score + 10
-      dots_left = dots_left - 1
-      -- TODO consolidate
-      cached_cmd('tput cup ' .. (#grid[1] + 2) .. ' 0')
-      ensure_color('level')
-      io.write(('Score: %4d\r\n'):format(score))
-      grid[new_pos[1]][new_pos[2]] = ' '
-      --erase_pos(new_pos)
-      --grid[new_pos[1]][new_pos[2]] == ' '
-      if dots_left == 0 then
-        -- XXX
-        --os.exit()
-        setup_next_level()
-        return
-      end
-    end
-    --]=]
   end
 
   do return end
