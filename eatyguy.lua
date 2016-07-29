@@ -8,7 +8,7 @@ local eatyguy = {}
 
 -- Parameters.
 
-local do_shorten_levels   = true  -- Default is false.
+local do_shorten_levels   = false  -- Default is false.
 local can_player_die      = true   -- Default is true.
 local percent_extra_paths = 30
 
