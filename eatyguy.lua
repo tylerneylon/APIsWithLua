@@ -17,10 +17,6 @@ local percent_extra_paths = 30
 local cols  = nil
 local lines = nil
 
--- Cached term strings.
-
-local term_clear_str = nil
-local term_home_str
 
 -- maze_grid[x][y] = set of 'x,y' pairs that are adjacent without a wall.
 local maze_grid  = nil
@@ -51,8 +47,6 @@ local function str_from_cmd(cmd)
   return s
 end
 
--- TODO Consolidate tput calls into this.
-
 local term_strs = {}  -- Maps cmd -> str.
 
 local function cached_cmd(cmd)
@@ -65,9 +59,6 @@ end
 local function to_xy(x, y)
   cached_cmd('tput cup ' .. y .. ' ' .. (x + 2))
 end
-
-
-local num_calls_left = 100
 
 -- This edits maze_grid by adding adjacent grid spaces, effectively drilling
 -- through walls. It's like a depth-first search except that we make some random
@@ -88,10 +79,6 @@ local function drill_from(x, y, already_visited)
       end
     end
   end
-
-  num_calls_left = num_calls_left - 1
-
-  -- if num_calls_left <= 0 then return end
 
   local xy_str = ('%d,%d'):format(x, y)
   already_visited[xy_str] = true
@@ -514,7 +501,7 @@ local function draw_player(elapsed)
 end
 
 local function draw(elapsed)
-  io.write(term_home_str)
+  cached_cmd('tput home')
 
   --draw_maze()
   draw_player(elapsed)
@@ -531,23 +518,16 @@ local function draw(elapsed)
   end
   player.pos = pl_pos
 
-  io.flush() -- TODO needed?
-end
-
-local function num_from_cmd(cmd)
-  p = io.popen(cmd)
-  n = tonumber(p:read())
-  p:close()
-  return n
+  io.flush()
 end
 
 function eatyguy.init()
 
-  os.execute('tput reset')
-  os.execute('tput civis')
+  cached_cmd('tput reset')
+  cached_cmd('tput civis')
 
-  cols  = num_from_cmd('tput cols')
-  lines = num_from_cmd('tput lines')
+  cols  = tonumber(str_from_cmd('tput cols'))
+  lines = tonumber(str_from_cmd('tput lines'))
 
   grid_w = math.floor((cols - 3) / 2)          -- Grid cells are 2 chars.
   grid_w = math.ceil(grid_w / 2) * 2 - 1       -- Ensure grid_w is odd.
@@ -560,9 +540,7 @@ function eatyguy.init()
   build_maze((grid_w - 1) / 2, (grid_h - 1) / 2)
   setup_grid()
 
-  term_clear_str = str_from_cmd('tput clear')
-  term_home_str = str_from_cmd('tput home')
-  io.write(term_clear_str)
+  cached_cmd('tput clear')
 
   math.randomseed(os.time())
 
