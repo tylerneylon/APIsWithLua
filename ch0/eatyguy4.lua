@@ -2,7 +2,7 @@
 
 local eatyguy = {}
 
--- Globals.
+-- Parameters.
 
 local percent_extra_paths = 15
 local grid                = nil       -- grid[x][y] = 'open', or falsy = a wall.
@@ -29,22 +29,31 @@ local function get_nbor_dirs(x, y, perc_extra)
   return nbor_dirs
 end
 
+local iters_left = 200
+
 local function drill_path_from(x, y)
+  iters_left = iters_left - 1
+  if iters_left <= 0 then return end
   grid[x][y] = 'open'
   local nbor_dirs = get_nbor_dirs(x, y)
   while #nbor_dirs > 0 do
     local dir = table.remove(nbor_dirs, math.random(#nbor_dirs))
     grid[x + dir[1]][y + dir[2]] = 'open'
     drill_path_from(x + 2 * dir[1], y + 2 * dir[2])
+    if iters_left <= 0 then return end
     nbor_dirs = get_nbor_dirs(x, y, percent_extra_paths)
   end
 end
 
 -- Public functions.
 
-function eatyguy.init()
+function eatyguy.init(il)
+
+  iters_left = il
+
   grid_w, grid_h = 65, 41
-  math.randomseed(os.time())
+  --math.randomseed(os.time()) -- XXX
+  math.randomseed(1)
 
   -- Build the maze.
   grid = {}
