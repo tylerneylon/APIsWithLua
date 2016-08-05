@@ -1,7 +1,5 @@
 -- eatyguy.lua
 
---print('[[0]]')
-
 local eatyguy = {}
 
 -- Globals.
@@ -9,12 +7,9 @@ local eatyguy = {}
 local percent_extra_paths = 15
 local grid                = nil       -- grid[x][y] = 'open', or falsy = a wall.
 local grid_w, grid_h      = nil, nil
-
 local player = {pos      = {1, 1},
                 dir      = {1, 0},
-                next_dir = {1, 0},
-                lives    = 3,
-                color    = 'player'}
+                next_dir = {1, 0}}
 
 -- Internal functions.
 
@@ -56,12 +51,8 @@ local function can_move_in_dir(character, dir)
   return (grid[gx] and grid[gx][gy]), {gx, gy}
 end
 
---print('[[0.5]]')
-
 local move_delta     = 1.0  -- seconds
 local next_move_time = timestamp() + move_delta
-
---print('[[0.6]]')
 
 local function update()
 
@@ -131,8 +122,6 @@ end
 
 function eatyguy.init()
 
-  --print('[[1]]')
-
   --grid_w, grid_h = 65, 41
   grid_w, grid_h = 39, 23
   math.randomseed(os.time())
@@ -155,7 +144,7 @@ function eatyguy.init()
       end
       io.flush()  -- Colors may not work without this.
     end
-    io.write('\n')  -- Move cursor to next row.
+    io.write('\r\n')  -- Move cursor to next row.
   end
 end
 

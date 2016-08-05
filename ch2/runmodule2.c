@@ -3,8 +3,11 @@
 // Loads eatyguy.lua and runs eatyguy.init().
 //
 
+#include <fcntl.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 #include "lauxlib.h"
 #include "lua.h"
@@ -17,6 +20,26 @@ double gettime() {
   struct timeval tv;
   gettimeofday(&tv, NULL);
   return tv.tv_sec + 1e-6 * tv.tv_usec;
+}
+
+void start() {
+
+  // Terminal setup.
+  system("tput clear");  // Clear the screen.
+  system("tput civis");  // Hide the cursor.
+  system("stty raw");    // Improve access to keypresses from stdin.
+
+  // Make reading from stdin non-blocking.
+  fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL) | O_NONBLOCK);
+}
+
+void done() {
+
+  // Put the terminal back into a decent state.
+  system("stty cooked");  // Undo earlier call to "stty raw".
+  system("tput reset");   // Reset terminal colors and clear the screen.
+
+  exit(0);
 }
 
 
@@ -55,8 +78,7 @@ int timestamp(lua_State *L) {
 
 int main() {
 
-  system("tput clear");  // Clear the screen.
-  system("tput civis");  // Hide the cursor.
+  start();
 
   // Create a Lua state and load the module.
   lua_State *L = luaL_newstate();
@@ -80,6 +102,9 @@ int main() {
     // Call eatyguy.loop().
     lua_getfield(L, -1, "loop");
     lua_call(L, 0, 0);
+
+    int c = getchar();
+    if (c == 27 || c == 'q' || c == 'Q') done();
   }
 
   return 0;
