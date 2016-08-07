@@ -1,6 +1,7 @@
 // runmodule2.c
 //
-// Loads eatyguy.lua and runs eatyguy.init().
+// Loads eatyguy2.lua and runs eatyguy.init(),
+// followed by eatyguy.loop() in a loop.
 //
 
 #include <fcntl.h>

@@ -1,6 +1,6 @@
 // runmodule1.c
 //
-// Loads eatyguy.lua and runs eatyguy.init().
+// Loads eatyguy1.lua and runs eatyguy.init().
 //
 
 #include <stdlib.h>
