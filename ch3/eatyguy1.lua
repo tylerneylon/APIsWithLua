@@ -51,14 +51,20 @@ local function can_move_in_dir(character, dir)
   return (grid[gx] and grid[gx][gy]), {gx, gy}
 end
 
-local move_delta     = 1.0  -- seconds
+local move_delta     = 0.2  -- seconds
 local next_move_time = timestamp() + move_delta
 
-local function update()
+local function update(key)
 
   -- Ensure any dot under the player has been eaten.
   local p = player.pos
   grid[p[1]][p[2]] = '  '
+
+  -- Update the next direction if an arrow key was pressed.
+  local dir_of_key = {left = {-1, 0}, right = {1, 0},
+                      up   = {0, -1}, down  = {0, 1}}
+  local new_dir = dir_of_key[key]
+  if new_dir then player.next_dir = new_dir end
 
   -- Only move every move_delta seconds.
   if timestamp() < next_move_time then return end
@@ -66,20 +72,16 @@ local function update()
 
   -- Change direction if we can; otherwise the next_dir will take effect if we
   -- hit a corner where we can turn in that direction.
-  local all_dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
   if can_move_in_dir(player, player.next_dir) then
     player.dir      = player.next_dir
-    player.next_dir = all_dirs[math.random(4)]
   end
 
   -- Move in direction player.dir if possible.
   local can_move, new_pos = can_move_in_dir(player, player.dir)
-  while not can_move do
-    player.dir = all_dirs[math.random(4)]
-    can_move, new_pos = can_move_in_dir(player, player.dir)
+  if can_move then
+    player.old_pos = player.pos  -- Save the old position.
+    player.pos = new_pos
   end
-  player.old_pos = player.pos  -- Save the old position.
-  player.pos = new_pos
 end
 
 local function draw()
@@ -92,7 +94,7 @@ local function draw()
     [ '0,1'] = {"^'", "|'"},
     ['0,-1'] = {"v.", "'."}
   }
-  local anim_timestep = 1.0
+  local anim_timestep = 0.1
   local dirkey   = ('%d,%d'):format(player.dir[1], player.dir[2])
   local framekey = math.floor(timestamp() / anim_timestep) % 2 + 1
   local chars    = draw_data[dirkey][framekey]
@@ -148,8 +150,8 @@ function eatyguy.init()
   end
 end
 
-function eatyguy.loop()
-  update()
+function eatyguy.loop(key)
+  update(key)
   draw()
 end
 

@@ -31,16 +31,20 @@ double gettime() {
   return tv.tv_sec + 1e-6 * tv.tv_usec;
 }
 
-int getkey() {
+int getkey(int *is_end_of_seq) {
 
   // We care about two cases:
   // Case 1: A sequence of the form 27, 91, X; return X.
   // Case 2: For any other sequence, return each int separately.
 
+  *is_end_of_seq = 0;
   int ch = getchar();
   if (ch == 27) {
     int next = getchar();
-    if (next == 91) return getchar();
+    if (next == 91) {
+      *is_end_of_seq = 1;
+      return getchar();
+    }
     // If we get here, then we're not in a 27, 91, X sequence.
     ungetc(next, stdin);
   }
@@ -132,12 +136,19 @@ int main() {
 
   lua_getglobal(L, "eatyguy");
   while (1) {
-    int key = getkey();
+    int is_end_of_seq;
+    int key = getkey(&is_end_of_seq);
     if (key == 27 || key == 'q' || key == 'Q') done();
 
-    // Call eatyguy.loop().
+    // Call eatyguy.loop(<key>).
     lua_getfield(L, -1, "loop");
-    lua_pushnumber(L, key);
+    if (is_end_of_seq && 65 <= key && key <= 68) {
+      // up, down, right, left = 65, 66, 67, 68
+      const char *arrow_names[] = {"up", "down", "right", "left"};
+      lua_pushstring(L, arrow_names[key - 65]);
+    } else {
+      lua_pushnumber(L, key);
+    }
     lua_call(L, 1, 0);
 
     sleephires(0.016);  // Sleep for 16ms.
