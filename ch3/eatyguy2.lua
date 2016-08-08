@@ -97,7 +97,7 @@ local function draw()
     [ '0,1'] = {"^'", "|'"},
     ['0,-1'] = {"v.", "'."}
   }
-  local anim_timestep = 0.1
+  local anim_timestep = 0.2
   local dirkey   = ('%d,%d'):format(player.dir[1], player.dir[2])
   local framekey = math.floor(timestamp() / anim_timestep) % 2 + 1
   local chars    = draw_data[dirkey][framekey]
