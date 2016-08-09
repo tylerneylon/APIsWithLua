@@ -1,4 +1,4 @@
--- eatyguy2.lua
+-- eatyguy3.lua
 
 local eatyguy = {}
 
@@ -54,7 +54,7 @@ end
 local move_delta     = 0.2  -- seconds
 local next_move_time = nil
 
-local function update(key)
+local function update(tick)
 
   -- Ensure any dot under the player has been eaten.
   local p = player.pos
@@ -63,14 +63,14 @@ local function update(key)
   -- Update the next direction if an arrow key was pressed.
   local dir_of_key = {left = {-1, 0}, right = {1, 0},
                       up   = {0, -1}, down  = {0, 1}}
-  local new_dir = dir_of_key[key]
+  local new_dir = dir_of_key[tick.key]
   if new_dir then player.next_dir = new_dir end
 
   -- Only move every move_delta seconds.
   if next_move_time == nil then
-    next_move_time = timestamp() + move_delta
+    next_move_time = tick.clock + move_delta
   end
-  if timestamp() < next_move_time then return end
+  if tick.clock < next_move_time then return end
   next_move_time = next_move_time + move_delta
 
   -- Change direction if we can; otherwise the next_dir will take effect if we
@@ -87,7 +87,7 @@ local function update(key)
   end
 end
 
-local function draw()
+local function draw(clock)
 
   -- Choose the sprite to draw.
   -- For example, a right-facing player is drawn as either '< or '-
@@ -99,7 +99,7 @@ local function draw()
   }
   local anim_timestep = 0.2
   local dirkey   = ('%d,%d'):format(player.dir[1], player.dir[2])
-  local framekey = math.floor(timestamp() / anim_timestep) % 2 + 1
+  local framekey = math.floor(clock / anim_timestep) % 2 + 1
   local chars    = draw_data[dirkey][framekey]
 
   -- Draw the player.
@@ -153,9 +153,9 @@ function eatyguy.init()
   end
 end
 
-function eatyguy.loop(key)
-  update(key)
-  draw()
+function eatyguy.loop(tick)
+  update(tick)
+  draw(tick.clock)
 end
 
 return eatyguy

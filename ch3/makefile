@@ -1,4 +1,4 @@
-binaries = eatyguy1 eatyguy2
+binaries = eatyguy1 eatyguy2 eatyguy3
 flags    = -llua -Llua -Ilua
 
 all: $(binaries)
