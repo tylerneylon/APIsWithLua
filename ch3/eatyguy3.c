@@ -7,7 +7,7 @@
 //   -- Lua-ish pseudocode representing the order of events.
 //   eatyguy.init()
 //   while true do
-//     eatyguy.loop(tick)  -- tick has keys 'clock' and 'key'.
+//     eatyguy.loop(state)  -- state has keys 'clock' and 'key'.
 //     sleep(0.016)
 //   end
 //
@@ -80,7 +80,7 @@ void done() {
   exit(0);
 }
 
-void push_tick_table(lua_State *L, int key, int is_end_of_seq) {
+void push_state_table(lua_State *L, int key, int is_end_of_seq) {
 
   lua_newtable(L);
 
@@ -151,9 +151,9 @@ int main() {
     int key = getkey(&is_end_of_seq);
     if (key == 27 || key == 'q' || key == 'Q') done();
 
-    // Call eatyguy.loop(tick).
+    // Call eatyguy.loop(state).
     lua_getfield(L, -1, "loop");
-    push_tick_table(L, key, is_end_of_seq);
+    push_state_table(L, key, is_end_of_seq);
     lua_call(L, 1, 0);
 
     sleephires(0.016);  // Sleep for 16ms.
