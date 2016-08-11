@@ -73,10 +73,10 @@ local function update(key)
   if timestamp() < next_move_time then return end
   next_move_time = next_move_time + move_delta
 
-  -- Change direction if we can; otherwise the next_dir will take effect if we
-  -- hit a corner where we can turn in that direction.
+  -- Change direction if we can; otherwise the next_dir will take effect if
+  -- we hit a corner where we can turn in that direction.
   if can_move_in_dir(player, player.next_dir) then
-    player.dir      = player.next_dir
+    player.dir = player.next_dir
   end
 
   -- Move in direction player.dir if possible.
