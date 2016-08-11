@@ -52,7 +52,7 @@ local function can_move_in_dir(character, dir)
 end
 
 local move_delta     = 1.0  -- seconds
-local next_move_time = timestamp() + move_delta
+local next_move_time = nil
 
 local function update()
 
@@ -61,6 +61,9 @@ local function update()
   grid[p[1]][p[2]] = '  '
 
   -- Only move every move_delta seconds.
+  if next_move_time == nil then
+    next_move_time = timestamp() + move_delta
+  end
   if timestamp() < next_move_time then return end
   next_move_time = next_move_time + move_delta
 
