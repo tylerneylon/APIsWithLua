@@ -80,19 +80,23 @@ void done() {
   exit(0);
 }
 
+void push_keypress(lua_State *L, int key, int is_end_of_seq) {
+  if (is_end_of_seq && 65 <= key && key <= 68) {
+    // up, down, right, left = 65, 66, 67, 68
+    static const char *arrow_names[] = {"up", "down", "right", "left"};
+    lua_pushstring(L, arrow_names[key - 65]);
+  } else {
+    lua_pushnumber(L, key);
+  }
+}
+
 void push_state_table(lua_State *L, int key, int is_end_of_seq) {
 
   lua_newtable(L);
 
     // stack = [.., {}]
 
-  if (is_end_of_seq && 65 <= key && key <= 68) {
-    // up, down, right, left = 65, 66, 67, 68
-    const char *arrow_names[] = {"up", "down", "right", "left"};
-    lua_pushstring(L, arrow_names[key - 65]);
-  } else {
-    lua_pushnumber(L, key);
-  }
+  push_keypress(L, key, is_end_of_seq);
 
     // stack = [.., {}, key]
 
