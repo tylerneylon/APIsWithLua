@@ -43,7 +43,7 @@ local function drill_path_from(x, y)
   end
 end
 
--- Check if a character can move in a given direction.
+-- Check whether a character can move in a given direction.
 -- Return can_move, new_pos.
 local function can_move_in_dir(character, dir)
   local p = character.pos
