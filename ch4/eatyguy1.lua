@@ -1,6 +1,11 @@
--- eatyguy3.lua
+-- eatyguy1.lua
 
 local eatyguy = {}
+
+-- Require modules.
+
+local Character = require 'Character'
+
 
 -- Globals.
 
@@ -41,14 +46,6 @@ local function drill_path_from(x, y)
     drill_path_from(x + 2 * dir[1], y + 2 * dir[2])
     nbor_dirs = get_nbor_dirs(x, y, percent_extra_paths)
   end
-end
-
--- Check whether a character can move in a given direction.
--- Return can_move, new_pos.
-local function can_move_in_dir(character, dir)
-  local p = character.pos
-  local gx, gy = p[1] + dir[1], p[2] + dir[2]
-  return (grid[gx] and grid[gx][gy]), {gx, gy}
 end
 
 local move_delta     = 0.2  -- seconds
