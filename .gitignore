@@ -6,3 +6,4 @@ eatyguy
 *.exe
 *.swp
 liblua.a
+*.o

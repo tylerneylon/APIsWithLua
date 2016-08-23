@@ -3,7 +3,7 @@ binaries = doscript loadmodule runmodule
 ifeq ($(OS),Windows_NT)
 	flags  = -llua
 else
-	flags  = -llua -L../lua -I../lua
+	flags  = -llua -L../lua -I../lua -lm
 	lualib = ../lua/liblua.a
 endif
 
