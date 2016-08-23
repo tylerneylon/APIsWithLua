@@ -2,7 +2,6 @@ binaries = eatyguy1 eatyguy2
 
 ifeq ($(OS),Windows_NT)
 	flags  = -llua
-	lualib = ""
 else
 	flags  = -llua -L../lua -I../lua
 	lualib = ../lua/liblua.a
