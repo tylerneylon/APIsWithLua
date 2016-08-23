@@ -5,3 +5,4 @@ lua-5.3.3*
 eatyguy
 *.exe
 *.swp
+liblua.a
