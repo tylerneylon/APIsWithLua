@@ -3,7 +3,7 @@ binaries = eatyguy1 eatyguy2
 ifeq ($(OS),Windows_NT)
   flags = -llua
 else
-  flags = -llua -Llua -Ilua
+  flags = -llua -L../lua -I../lua
 endif
 
 all: $(binaries)
