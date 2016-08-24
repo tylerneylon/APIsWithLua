@@ -1,6 +1,6 @@
-// eatyguy1.c
+// eatyguy4.c
 //
-// Load eatyguy1.lua and run it in the order below.
+// Load eatyguy4.lua and run it in the order below.
 //
 //   -- Lua-ish pseudocode representing the order of events.
 //   eatyguy.init()
@@ -91,27 +91,6 @@ void push_keypress(lua_State *L, int key, int is_end_of_seq) {
 
 // Lua-visible functions.
 
-// Lua: set_color('b' or 'g', <color>).
-int set_color(lua_State *L) {
-  const char *b_or_g = lua_tostring(L, 1);
-  int color = lua_tonumber(L, 2);
-  char cmd[1024];
-  snprintf(cmd, 1024, "tput seta%s %d", b_or_g, color);
-  system(cmd);
-  return 0;
-}
-
-// Lua: set_pos(x, y).
-int set_pos(lua_State *L) {
-  int x = lua_tonumber(L, 1);
-  int y = lua_tonumber(L, 2);
-  char cmd[1024];
-  // The 'tput cup' command accepts y before x; not a typo.
-  snprintf(cmd, 1024, "tput cup %d %d", y, x);
-  system(cmd);
-  return 0;
-}
-
 // Lua: timestamp().
 // Return a high-resolution timestamp in seconds.
 int timestamp(lua_State *L) {
@@ -130,13 +109,14 @@ int main() {
   lua_State *L = luaL_newstate();
   luaL_openlibs(L);
 
-  // Make our Lua-callable functions visible to Lua.
-  lua_register(L, "set_color", set_color);
-  lua_register(L, "set_pos",   set_pos);
+  // Set up API functions written in C.
   lua_register(L, "timestamp", timestamp);
 
-  // Load eatyguy1 and run the init() function.
-  luaL_dofile(L, "eatyguy1.lua");
+  // Set up API functions written in Lua.
+  luaL_dofile(L, "util.lua");
+
+  // Load eatyguy4 and run the init() function.
+  luaL_dofile(L, "eatyguy4.lua");
   lua_setglobal(L, "eatyguy");
   lua_settop(L, 0);
 

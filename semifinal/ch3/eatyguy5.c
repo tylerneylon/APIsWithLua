@@ -1,11 +1,13 @@
-// eatyguy2.c
+// eatyguy5.c
 //
-// Load eatyguy2.lua and run it in the order below.
+// Load eatyguy5.lua and run it in the order below.
+//
+// This introduces the use of Lua tables via Lua's C API.
 //
 //   -- Lua-ish pseudocode representing the order of events.
 //   eatyguy.init()
 //   while true do
-//     eatyguy.loop(key)
+//     eatyguy.loop(state)  -- state has keys 'clock' and 'key'.
 //     sleep(0.016)
 //   end
 //
@@ -88,6 +90,29 @@ void push_keypress(lua_State *L, int key, int is_end_of_seq) {
   }
 }
 
+void push_state_table(lua_State *L, int key, int is_end_of_seq) {
+
+  lua_newtable(L);
+
+    // stack = [.., {}]
+
+  push_keypress(L, key, is_end_of_seq);
+
+    // stack = [.., {}, key]
+
+  lua_setfield(L, -2, "key");
+
+    // stack = [.., {key = key}]
+
+  lua_pushnumber(L, gettime());
+
+    // stack = [.., {key = key}, clock]
+
+  lua_setfield(L, -2, "clock");
+
+    // stack = [.., {key = key, clock = clock}]
+}
+
 
 // Lua-visible functions.
 
@@ -115,8 +140,8 @@ int main() {
   // Set up API functions written in Lua.
   luaL_dofile(L, "util.lua");
 
-  // Load eatyguy2 and run the init() function.
-  luaL_dofile(L, "eatyguy2.lua");
+  // Load eatyguy5 and run the init() function.
+  luaL_dofile(L, "eatyguy5.lua");
   lua_setglobal(L, "eatyguy");
   lua_settop(L, 0);
 
@@ -130,9 +155,9 @@ int main() {
     int key = getkey(&is_end_of_seq);
     if (key == 27 || key == 'q' || key == 'Q') done();
 
-    // Call eatyguy.loop(<key>).
+    // Call eatyguy.loop(state).
     lua_getfield(L, -1, "loop");
-    push_keypress(L, key, is_end_of_seq);
+    push_state_table(L, key, is_end_of_seq);
     lua_call(L, 1, 0);
 
     sleephires(0.016);  // Sleep for 16ms.

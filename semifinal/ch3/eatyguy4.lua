@@ -1,4 +1,4 @@
--- eatyguy2.lua
+-- eatyguy4.lua
 
 local eatyguy = {}
 

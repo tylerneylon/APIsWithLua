@@ -1,2 +1,2 @@
-binaries = eatyguy1 eatyguy2 eatyguy3
+binaries = eatyguy3 eatyguy4 eatyguy5
 include ../makefile_setup
