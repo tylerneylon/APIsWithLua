@@ -5,12 +5,12 @@ ifeq ($(OS),Windows_NT)
 	flags    = -llua
 else ifeq ($(shell uname),Darwin)
 	# macOS.
-	flags    = -llua -L../lua -I../lua -lm
+	flags    = -llua -L../lua -I../lua
 	lualib   = ../lua/liblua.a
 	luaflags = SYSCFLAGS="-DLUA_USE_MACOSX"
 else
 	# Guess Linux.
-	flags    = -llua -L../lua -I../lua -lm
+	flags    = -llua -L../lua -I../lua -lm -ldl
 	lualib   = ../lua/liblua.a
 	luaflags = SYSCFLAGS="-DLUA_USE_LINUX"
 endif
