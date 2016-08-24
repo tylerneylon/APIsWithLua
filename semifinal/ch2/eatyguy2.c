@@ -26,9 +26,9 @@ double gettime() {
 void start() {
 
   // Terminal setup.
-  system("tput clear");  // Clear the screen.
-  system("tput civis");  // Hide the cursor.
-  system("stty raw");    // Improve access to keypresses from stdin.
+  system("tput clear");      // Clear the screen.
+  system("tput civis");      // Hide the cursor.
+  system("stty raw -echo");  // Improve access to keypresses from stdin.
 
   // Make reading from stdin non-blocking.
   fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL) | O_NONBLOCK);
@@ -37,8 +37,8 @@ void start() {
 void done() {
 
   // Put the terminal back into a decent state.
-  system("stty cooked");  // Undo earlier call to "stty raw".
-  system("tput reset");   // Reset terminal colors and clear the screen.
+  system("stty cooked echo");  // Undo earlier call to "stty raw".
+  system("tput reset");        // Reset terminal colors and clear the screen.
 
   exit(0);
 }
