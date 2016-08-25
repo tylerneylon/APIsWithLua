@@ -1,6 +1,6 @@
 // runmodule.c
 //
-// Loads eatyguy.lua and runs eatyguy.init().
+// Loads eatyguy0.lua and runs eatyguy.init().
 //
 
 #include "lauxlib.h"
@@ -12,7 +12,7 @@ int main() {
   // Create a Lua state and load the module.
   lua_State *L = luaL_newstate();
   luaL_openlibs(L);
-  luaL_dofile(L, "eatyguy.lua");
+  luaL_dofile(L, "eatyguy0.lua");
   lua_setglobal(L, "eatyguy");
   lua_settop(L, 0);
 
