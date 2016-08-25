@@ -90,7 +90,7 @@ int main() {
   lua_register(L, "set_pos",   set_pos);
   lua_register(L, "timestamp", timestamp);
 
-  // Load eatyguy2 and run the init() function.
+  // Load eatyguy2.lua and run the init() function.
   luaL_dofile(L, "eatyguy2.lua");
   lua_setglobal(L, "eatyguy");
   lua_settop(L, 0);
