@@ -98,27 +98,9 @@ local function draw(clock)
   local anim_timestep = 0.2
   local dirkey   = ('%d,%d'):format(player.dir[1], player.dir[2])
   local framekey = math.floor(clock / anim_timestep) % 2 + 1
-  local chars    = draw_data[dirkey][framekey]
+  player.chars   = draw_data[dirkey][framekey]
 
-  -- Draw the player.
-  set_color('b', 3)  -- Yellow background.
-  set_color('f', 0)  -- Black foreground.
-  local x = 2 * player.pos[1]
-  local y =     player.pos[2]
-  set_pos(x, y)
-  io.write(chars)
-  io.flush()
-
-  -- Erase the old player pos if appropriate.
-  if player.old_pos then
-    local x = 2 * player.old_pos[1]
-    local y =     player.old_pos[2]
-    set_pos(x, y)
-    set_color('b', 0)  -- Black background.
-    io.write('  ')
-    io.flush()
-    player.old_pos = nil
-  end
+  player:draw()
 end
 
 -- Public functions.

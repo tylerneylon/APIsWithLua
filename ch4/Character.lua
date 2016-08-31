@@ -19,8 +19,6 @@ function Character:can_move_in_dir(dir, grid)
   return (grid[gx] and grid[gx][gy]), {gx, gy}
 end
 
--- TODO First use and debug the above fn, then the one below.
-
 function Character:draw()
   -- Draw the player.
   set_color('b', 3)  -- Yellow background.
