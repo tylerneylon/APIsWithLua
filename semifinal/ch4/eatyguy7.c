@@ -1,6 +1,6 @@
-// eatyguy6.c
+// eatyguy7.c
 //
-// Load eatyguy6.lua and run it in the order below.
+// Load eatyguy7.lua and run it in the order below.
 //
 // This introduces the use of Lua tables via Lua's C API.
 //
@@ -139,8 +139,8 @@ int main() {
   // Set up API functions written in Lua.
   luaL_dofile(L, "util.lua");
 
-  // Load eatyguy6 and run the init() function.
-  luaL_dofile(L, "eatyguy6.lua");
+  // Load eatyguy7 and run the init() function.
+  luaL_dofile(L, "eatyguy7.lua");
   lua_setglobal(L, "eatyguy");
   lua_settop(L, 0);
 

@@ -1,4 +1,4 @@
--- eatyguy6.lua
+-- eatyguy7.lua
 
 local eatyguy = {}
 
@@ -11,7 +11,7 @@ local Character = require 'Character'
 -- Globals.
 
 local percent_extra_paths = 15
-local grid                = nil       -- grid[x][y]: falsy = wall.
+local grid                = nil       -- grid[x][y] = 'open', or falsy = a wall.
 local grid_w, grid_h      = nil, nil
 local player = Character:new({pos      = {1, 1},
                               dir      = {1, 0},
@@ -71,9 +71,18 @@ local function update(state)
   if state.clock < next_move_time then return end
   next_move_time = next_move_time + move_delta
 
-  -- It's been at least move_delta seconds since the last
-  -- time things moved, so let's move them now!
-  player:move_if_possible(grid)
+  -- Change direction if we can; otherwise the next_dir will take effect if we
+  -- hit a corner where we can turn in that direction.
+  if player:can_move_in_dir(player.next_dir, grid) then
+    player.dir = player.next_dir
+  end
+
+  -- Move in direction player.dir if possible.
+  local can_move, new_pos = player:can_move_in_dir(player.dir, grid)
+  if can_move then
+    player.old_pos = player.pos  -- Save the old position.
+    player.pos = new_pos
+  end
 end
 
 local function draw(clock)

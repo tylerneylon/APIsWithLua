@@ -19,6 +19,21 @@ function Character:can_move_in_dir(dir, grid)
   return (grid[gx] and grid[gx][gy]), {gx, gy}
 end
 
+function Character:move_if_possible(grid)
+  -- Change direction if we can; otherwise the next_dir will take effect if we
+  -- hit a corner where we can turn in that direction.
+  if self:can_move_in_dir(self.next_dir, grid) then
+    self.dir = self.next_dir
+  end
+
+  -- Move in direction self.dir if possible.
+  local can_move, new_pos = self:can_move_in_dir(self.dir, grid)
+  if can_move then
+    self.old_pos = self.pos  -- Save the old position.
+    self.pos     = new_pos
+  end
+end
+
 function Character:draw()
   -- Draw the player.
   set_color('b', 3)  -- Yellow background.
