@@ -5,6 +5,7 @@ local eatyguy = {}
 
 -- Require modules.
 
+local Baddy     = require 'Baddy'
 local Character = require 'Character'
 
 
@@ -16,6 +17,8 @@ local grid_w, grid_h      = nil, nil
 local player = Character:new({pos      = {1, 1},
                               dir      = {1, 0},
                               next_dir = {1, 0}})
+local baddies = {}
+
 
 -- Internal functions.
 
@@ -71,17 +74,11 @@ local function update(state)
   if state.clock < next_move_time then return end
   next_move_time = next_move_time + move_delta
 
-  -- Change direction if we can; otherwise the next_dir will take effect if we
-  -- hit a corner where we can turn in that direction.
-  if player:can_move_in_dir(player.next_dir, grid) then
-    player.dir = player.next_dir
-  end
-
-  -- Move in direction player.dir if possible.
-  local can_move, new_pos = player:can_move_in_dir(player.dir, grid)
-  if can_move then
-    player.old_pos = player.pos  -- Save the old position.
-    player.pos = new_pos
+  -- It's been at least move_delta seconds since the last
+  -- time things moved, so let's move them now!
+  player:move_if_possible(grid)
+  for _, baddy in pairs(baddies) do
+    baddy:move_if_possible(grid)
   end
 end
 
@@ -100,7 +97,10 @@ local function draw(clock)
   local framekey = math.floor(clock / anim_timestep) % 2 + 1
   player.chars   = draw_data[dirkey][framekey]
 
-  player:draw()
+  player:draw(grid)
+  for _, baddy in pairs(baddies) do
+    baddy:draw(grid)
+  end
 end
 
 -- Public functions.
@@ -110,6 +110,16 @@ function eatyguy.init()
   --grid_w, grid_h = 65, 41
   grid_w, grid_h = 39, 23
   math.randomseed(os.time())
+
+  -- Set up the baddies.
+  local baddy_info = { {color = 1, chars = 'oo', pos = {1, 1}},
+                       {color = 2, chars = '@@', pos = {1, 0}},
+                       {color = 5, chars = '^^', pos = {0, 1}} }
+  for _, info in pairs(baddy_info) do
+    info.home = {(grid_w - 1) * info.pos[1] + 1,
+                 (grid_h - 1) * info.pos[2] + 1}
+    table.insert(baddies, Baddy:new(info))
+  end
 
   -- Build the maze.
   grid = {}

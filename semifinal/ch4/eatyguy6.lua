@@ -91,7 +91,7 @@ local function draw(clock)
   local framekey = math.floor(clock / anim_timestep) % 2 + 1
   player.chars   = draw_data[dirkey][framekey]
 
-  player:draw()
+  player:draw(grid)
 end
 
 -- Public functions.

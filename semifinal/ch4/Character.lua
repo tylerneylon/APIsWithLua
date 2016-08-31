@@ -34,9 +34,10 @@ function Character:move_if_possible(grid)
   end
 end
 
-function Character:draw()
-  -- Draw the player.
-  set_color('b', 3)  -- Yellow background.
+function Character:draw(grid)
+  -- Draw the character.
+  local color = self.color or 3  -- Default to yellow.
+  set_color('b', color)
   set_color('f', 0)  -- Black foreground.
   local x = 2 * self.pos[1]
   local y =     self.pos[2]
@@ -44,13 +45,15 @@ function Character:draw()
   io.write(self.chars)
   io.flush()
 
-  -- Erase the old player pos if appropriate.
+  -- Erase the old character pos if appropriate.
   if self.old_pos then
-    local x = 2 * self.old_pos[1]
-    local y =     self.old_pos[2]
+    local op = self.old_pos
+    local x  = 2 * op[1]
+    local y  =     op[2]
     set_pos(x, y)
+    set_color('f', 7)  -- White foreground.
     set_color('b', 0)  -- Black background.
-    io.write('  ')
+    io.write(grid[op[1]][op[2]])
     io.flush()
     self.old_pos = nil
   end
