@@ -2,6 +2,7 @@
 
 local eatyguy = {}
 
+
 -- Require modules.
 
 local Character = require 'Character'
@@ -12,9 +13,9 @@ local Character = require 'Character'
 local percent_extra_paths = 15
 local grid                = nil       -- grid[x][y] = 'open', or falsy = a wall.
 local grid_w, grid_h      = nil, nil
-local player = {pos      = {1, 1},
-                dir      = {1, 0},
-                next_dir = {1, 0}}
+local player = Character:new({pos      = {1, 1},
+                              dir      = {1, 0},
+                              next_dir = {1, 0}})
 
 -- Internal functions.
 
@@ -72,12 +73,12 @@ local function update(state)
 
   -- Change direction if we can; otherwise the next_dir will take effect if we
   -- hit a corner where we can turn in that direction.
-  if can_move_in_dir(player, player.next_dir) then
-    player.dir      = player.next_dir
+  if player:can_move_in_dir(player.next_dir, grid) then
+    player.dir = player.next_dir
   end
 
   -- Move in direction player.dir if possible.
-  local can_move, new_pos = can_move_in_dir(player, player.dir)
+  local can_move, new_pos = player:can_move_in_dir(player.dir, grid)
   if can_move then
     player.old_pos = player.pos  -- Save the old position.
     player.pos = new_pos

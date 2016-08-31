@@ -7,8 +7,8 @@
 
 Character = {}
 
-function Character:new()
-  c = {}
+function Character:new(c)
+  c = c or {}
   self.__index = self
   return setmetatable(c, self)
 end
