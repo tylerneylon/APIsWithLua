@@ -19,10 +19,12 @@ else
 	luaflags = SYSCFLAGS="-DLUA_USE_LINUX"
 endif
 
-all: $(binaries)
+all = $(binaries) $(other)
+
+all: $(all)
 
 clean:
-	rm -f $(binaries)
+	rm -f $(all)
 
 $(binaries) : % : %.c $(lualib)
 	cc $< -o $@ $(flags)

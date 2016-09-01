@@ -8,3 +8,5 @@ eatyguy
 liblua.a
 *.o
 scratch.md
+*.a
+*.so
