@@ -12,6 +12,12 @@
 //   end
 //
 
+#include "Pair.h"
+
+#include "lauxlib.h"
+#include "lua.h"
+#include "lualib.h"
+
 #include <fcntl.h>
 #include <math.h>
 #include <stdio.h>
@@ -19,10 +25,6 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
-
-#include "lauxlib.h"
-#include "lua.h"
-#include "lualib.h"
 
 
 // Internal functions.
