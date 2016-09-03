@@ -8,46 +8,57 @@ local eatyguy = {}
 local Baddy     = require 'Baddy'
 
 
+-- Convenience functions.
+
+-- Expect a Pair or a table; if it's a table, convert to a Pair.
+local function pair(t)
+  return (type(t) == 'table') and Pair:new(t) or t
+end
+
+
 -- Globals.
 
 local percent_extra_paths = 15
-local grid                = nil       -- grid[x][y] = 'open', or falsy = a wall.
+local grid                = nil
 local grid_w, grid_h      = nil, nil
-local player = Character:new({pos      = {1, 1},
-                              dir      = {1, 0},
-                              next_dir = {1, 0}})
+local player = Character:new({pos      = pair{1, 1},
+                              dir      = pair{1, 0},
+                              next_dir = pair{1, 0}})
 local baddies = {}
 
 
 -- Internal functions.
 
-local function is_in_bounds(x, y)
-  return (1 <= x and x <= grid_w and
-          1 <= y and y <= grid_h)
+local function is_in_bounds(pt)
+  return (1 <= pt.x and pt.x <= grid_w and
+          1 <= pt.y and pt.y <= grid_h)
 end
 
-local function get_nbor_dirs(x, y, perc_extra)
-  perc_extra = perc_extra or 0  -- The percent chance of including extra nbors.
+local function get_nbor_dirs(pt, perc_extra)
+  -- `perc_extra` = the percent chance of including extra nbors.
+  perc_extra = perc_extra or 0
   local nbor_dirs = {}
-  local all_dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
+  local all_dirs = {pair{1, 0}, pair{-1,  0},
+                    pair{0, 1}, pair{ 0, -1}}
   for _, dir in pairs(all_dirs) do
-    local nx, ny = x + 2 * dir[1], y + 2 * dir[2]
+    local n_pt = pt + dir * 2  -- The nbor point.
     local is_extra_ok = (math.random(100) <= perc_extra)
-    if is_in_bounds(nx, ny) and (not grid[nx][ny] or is_extra_ok) then
+    if is_in_bounds(n_pt) and
+      (not grid[n_pt.x][n_pt.y] or is_extra_ok) then
       table.insert(nbor_dirs, dir)
     end
   end
   return nbor_dirs
 end
 
-local function drill_path_from(x, y)
-  grid[x][y] = '. '
-  local nbor_dirs = get_nbor_dirs(x, y)
+local function drill_path_from(pt)
+  grid[pt.x][pt.y] = '. '
+  local nbor_dirs = get_nbor_dirs(pt)
   while #nbor_dirs > 0 do
     local dir = table.remove(nbor_dirs, math.random(#nbor_dirs))
-    grid[x + dir[1]][y + dir[2]] = '. '
-    drill_path_from(x + 2 * dir[1], y + 2 * dir[2])
-    nbor_dirs = get_nbor_dirs(x, y, percent_extra_paths)
+    grid[pt.x + dir.x][pt.y + dir.y] = '. '
+    drill_path_from(pt + dir * 2)
+    nbor_dirs = get_nbor_dirs(pt, percent_extra_paths)
   end
 end
 
@@ -57,12 +68,12 @@ local next_move_time = nil
 local function update(state)
 
   -- Ensure any dot under the player has been eaten.
-  local p = player.pos
-  grid[p[1]][p[2]] = '  '
+  local pt = pair(player.pos)
+  grid[pt.x][pt.y] = '  '
 
   -- Update the next direction if an arrow key was pressed.
-  local dir_of_key = {left = {-1, 0}, right = {1, 0},
-                      up   = {0, -1}, down  = {0, 1}}
+  local dir_of_key = {left = pair{-1,  0}, right = pair{1, 0},
+                      up   = pair{ 0, -1}, down  = pair{0, 1}}
   local new_dir = dir_of_key[state.key]
   if new_dir then player.next_dir = new_dir end
 
@@ -83,8 +94,8 @@ end
 
 local function draw(clock)
 
-  -- Choose the sprite to draw.
-  -- For example, a right-facing player is drawn as either '< or '-
+  -- Choose the sprite to draw. For example, a right-facing
+  -- player is drawn as either '< or '-
   local draw_data = {
     [ '1,0'] = {"'<", "'-"},
     ['-1,0'] = {">'", "-'"},
@@ -92,7 +103,7 @@ local function draw(clock)
     ['0,-1'] = {"v.", "'."}
   }
   local anim_timestep = 0.2
-  local dirkey   = ('%d,%d'):format(player.dir[1], player.dir[2])
+  local dirkey   = ('%d,%d'):format(player.dir.x, player.dir.y)
   local framekey = math.floor(clock / anim_timestep) % 2 + 1
   player.chars   = draw_data[dirkey][framekey]
 
@@ -106,7 +117,6 @@ end
 
 function eatyguy.init()
 
-  --grid_w, grid_h = 65, 41
   grid_w, grid_h = 39, 23
   math.randomseed(os.time())
 
@@ -115,15 +125,15 @@ function eatyguy.init()
                        {color = 2, chars = '@@', pos = {1, 0}},
                        {color = 5, chars = '^^', pos = {0, 1}} }
   for _, info in pairs(baddy_info) do
-    info.home = {(grid_w - 1) * info.pos[1] + 1,
-                 (grid_h - 1) * info.pos[2] + 1}
+    info.home = pair{(grid_w - 1) * info.pos[1] + 1,
+                     (grid_h - 1) * info.pos[2] + 1}
     table.insert(baddies, Baddy:new(info))
   end
 
   -- Build the maze.
   grid = {}
   for x = 1, grid_w do grid[x] = {} end
-  drill_path_from(1, 1)
+  drill_path_from(pair{1, 1})
 
   -- Draw the maze.
   set_color('f', 7)  -- White.

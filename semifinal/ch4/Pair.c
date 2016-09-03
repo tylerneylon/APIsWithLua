@@ -60,6 +60,33 @@ int Pair_new(lua_State *L) {
 }
 
 
+// -- Internal functions --
+
+// Clear the stack and set up a new Pair instance on it.
+void push_new_pair(lua_State *L, lua_Number x, lua_Number y) {
+
+  // Clear the stack.
+  lua_settop(L, 0);
+    // stack = []
+
+  // Set up the new resulting Pair instance.
+  lua_newtable(L);
+    // stack = [t (the new table)]
+  lua_pushnumber(L, x);
+    // stack = [t, x]
+  lua_rawseti(L, -2, 1);  // t[1] = x
+    // stack = [t]
+  lua_pushnumber(L, y);
+    // stack = [t, y]
+  lua_rawseti(L, -2, 2);  // t[2] = y
+    // stack = [t]
+  lua_pushvalue(L, -1);
+    // stack = [t, t]
+  Pair_new(L);
+    // stack = [new Pair from t]
+}
+
+
 // -- Metamethods --
 
 // Pair_mt:index(key)
@@ -119,20 +146,22 @@ int Pair_mt_add(lua_State *L) {
     // stack = []
 
   // Set up a new table with the sum.
-  lua_newtable(L);
-    // stack = [t = {}]
-  for (int i = 0; i < 2; i++) {
-    lua_pushnumber(L, p[i] + q[i]);
-    // stack = [t, p[i] + q[i]]
-    lua_rawseti(L, 1, i + 1);  // Set t[i + 1] = p[i] + q[i].
-    // stack = [t]
-  }
+  push_new_pair(L, p[0] + q[0], p[1] + q[1]);
 
-  // Call Pair:new() on the table t.
-  lua_pushvalue(L, -1);
-    // stack = [t, t]
-  Pair_new(L);
-    // stack = [.., new Pair from t]
+  return 1;
+}
+
+// Pair_mt:mul(scalar)
+int Pair_mt_mul(lua_State *L) {
+
+  // Expected: stack = [self, scalar]
+
+  // Extract the needed values.
+  Pair *pair = (Pair *)luaL_checkudata(L, 1, Pair_metatable);
+  lua_Number scalar = luaL_checknumber(L, 2);
+
+  // Set up the new resulting Pair instance.
+  push_new_pair(L, pair->x * scalar, pair->y * scalar);
 
   return 1;
 }
@@ -177,6 +206,7 @@ int luaopen_Pair(lua_State *L) {
       {"__index", Pair_mt_index},
       {"__add",   Pair_mt_add},
       {"__eq",    Pair_mt_eq},
+      {"__mul",   Pair_mt_mul},
       {NULL, NULL}
     };
     luaL_setfuncs(L, metamethods, 0);

@@ -26,5 +26,5 @@ function set_color(b_or_f, color)
 end
 
 function set_pos(x, y)
-  cached_cmd('tput cup ' .. y .. ' ' .. x)
+  cached_cmd(('tput cup %d %d'):format(y, x))
 end

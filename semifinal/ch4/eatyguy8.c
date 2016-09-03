@@ -138,6 +138,8 @@ int main() {
 
   // Set up API functions written in C.
   lua_register(L, "timestamp", timestamp);
+  luaopen_Pair(L);
+  lua_setglobal(L, "Pair");
 
   // Set up API functions written in Lua.
   luaL_dofile(L, "util.lua");

@@ -11,7 +11,7 @@ local Baddy     = require 'Baddy'
 -- Globals.
 
 local percent_extra_paths = 15
-local grid                = nil       -- grid[x][y] = 'open', or falsy = a wall.
+local grid                = nil
 local grid_w, grid_h      = nil, nil
 local player = Character:new({pos      = {1, 1},
                               dir      = {1, 0},
@@ -27,13 +27,15 @@ local function is_in_bounds(x, y)
 end
 
 local function get_nbor_dirs(x, y, perc_extra)
-  perc_extra = perc_extra or 0  -- The percent chance of including extra nbors.
+  -- `perc_extra` = the percent chance of including extra nbors.
+  perc_extra = perc_extra or 0
   local nbor_dirs = {}
   local all_dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
   for _, dir in pairs(all_dirs) do
     local nx, ny = x + 2 * dir[1], y + 2 * dir[2]
     local is_extra_ok = (math.random(100) <= perc_extra)
-    if is_in_bounds(nx, ny) and (not grid[nx][ny] or is_extra_ok) then
+    if is_in_bounds(nx, ny) and
+      (not grid[nx][ny] or is_extra_ok) then
       table.insert(nbor_dirs, dir)
     end
   end
@@ -83,8 +85,8 @@ end
 
 local function draw(clock)
 
-  -- Choose the sprite to draw.
-  -- For example, a right-facing player is drawn as either '< or '-
+  -- Choose the sprite to draw. For example, a right-facing
+  -- player is drawn as either '< or '-
   local draw_data = {
     [ '1,0'] = {"'<", "'-"},
     ['-1,0'] = {">'", "-'"},
@@ -92,7 +94,8 @@ local function draw(clock)
     ['0,-1'] = {"v.", "'."}
   }
   local anim_timestep = 0.2
-  local dirkey   = ('%d,%d'):format(player.dir[1], player.dir[2])
+  local dirkey   = ('%d,%d'):format(player.dir[1],
+                                    player.dir[2])
   local framekey = math.floor(clock / anim_timestep) % 2 + 1
   player.chars   = draw_data[dirkey][framekey]
 
@@ -106,7 +109,6 @@ end
 
 function eatyguy.init()
 
-  --grid_w, grid_h = 65, 41
   grid_w, grid_h = 39, 23
   math.randomseed(os.time())
 

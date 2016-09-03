@@ -35,6 +35,7 @@ function Character:move_if_possible(grid)
 end
 
 function Character:draw(grid)
+
   -- Draw the character.
   local color = self.color or 3  -- Default to yellow.
   set_color('b', color)
