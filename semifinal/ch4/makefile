@@ -42,7 +42,7 @@ eatyguy7: eatyguy7.c $(lualib)
 	$(cc) $< -o $@ $(flags)
 
 eatyguy8: eatyguy8.c $(lualib) Pair.o
-	$(cc) $< -o $@ $(flags) Pair.o
+	$(cc) $< -o $@ Pair.o $(flags)
 
 ../lua/liblua.a:
 	make -C ../lua liblua.a $(luaflags)
