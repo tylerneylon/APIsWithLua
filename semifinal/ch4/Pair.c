@@ -101,8 +101,8 @@ int Pair_mt_add(lua_State *L) {
   
   // Extract the pairs p, q from the stack.
   Pair *pair = (Pair *)luaL_checkudata(L, 1, Pair_metatable);
-  int p[2] = {pair->x, pair->y};
-  int q[2];
+  lua_Number p[2] = {pair->x, pair->y};
+  lua_Number q[2];
   for (int i = 0; i < 2; ++i) {
     int t = lua_geti(L, 2, i + 1);
       // stack = [self, other, other[i + 1]]
@@ -135,6 +135,25 @@ int Pair_mt_add(lua_State *L) {
   return 1;
 }
 
+// Pair_mt:eq(other)
+int Pair_mt_eq(lua_State *L) {
+
+  // Expected: stack = [self (p), other (q)]
+
+  // Extract the pairs p, q from the stack.
+  Pair *p = (Pair *)luaL_checkudata(L, 1, Pair_metatable);
+  Pair *q = (Pair *)luaL_testudata(L, 2, Pair_metatable);
+
+  // Push true or false onto the stack.
+  if (q == NULL) {
+    lua_pushboolean(L, 0);  // If q is not a Pair, return false.
+  } else {
+    lua_pushboolean(L, p->x == q->x && p->y == q->y);
+  }
+
+  return 1;
+}
+
 
 // -- Luaopen function --
 
@@ -155,6 +174,7 @@ int luaopen_Pair(lua_State *L) {
     static struct luaL_Reg metamethods[] = {
       {"__index", Pair_mt_index},
       {"__add",   Pair_mt_add},
+      {"__eq",    Pair_mt_eq},
       {NULL, NULL}
     };
     luaL_setfuncs(L, metamethods, 0);
