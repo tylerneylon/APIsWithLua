@@ -9,10 +9,7 @@
 //
 //   local p = Pair:new {1, 2}
 //   local q = Pair:new {3, 4}
-//   print(p + q)      -- Prints out '4,6'.
-//   print(p.x + p.y)  -- Prints out '3'.
-//
-//   TODO Confirm that that example actually works.
+//   local r = p + q * 2  -- Now r = {7, 10}.
 //
 
 #include "lua.h"
