@@ -104,9 +104,11 @@ int Pair_mt_add(lua_State *L) {
   lua_Number p[2] = {pair->x, pair->y};
   lua_Number q[2];
   for (int i = 0; i < 2; ++i) {
-    int t = lua_geti(L, 2, i + 1);
+    lua_pushnumber(L, i + 1);
+      // stack = [self, other, i + 1]
+    lua_gettable(L, 2);
       // stack = [self, other, other[i + 1]]
-    if (t != LUA_TNUMBER) {
+    if (lua_type(L, -1) != LUA_TNUMBER) {
       return luaL_argerror(L, 2, "bad 2nd addend");
     }
     q[i] = lua_tonumber(L, -1);
@@ -122,7 +124,7 @@ int Pair_mt_add(lua_State *L) {
   for (int i = 0; i < 2; i++) {
     lua_pushnumber(L, p[i] + q[i]);
     // stack = [t, p[i] + q[i]]
-    lua_seti(L, 1, i + 1);
+    lua_rawseti(L, 1, i + 1);  // Set t[i + 1] = p[i] + q[i].
     // stack = [t]
   }
 
