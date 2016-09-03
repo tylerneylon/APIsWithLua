@@ -139,6 +139,8 @@ int main() {
 
   // Set up API functions written in Lua.
   luaL_dofile(L, "util.lua");
+  luaL_dofile(L, "Character.lua");
+  lua_setglobal(L, "Character");
 
   // Load eatyguy7 and run the init() function.
   luaL_dofile(L, "eatyguy7.lua");

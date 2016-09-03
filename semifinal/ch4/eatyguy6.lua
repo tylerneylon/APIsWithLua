@@ -3,11 +3,6 @@
 local eatyguy = {}
 
 
--- Require modules.
-
-local Character = require 'Character'
-
-
 -- Globals.
 
 local percent_extra_paths = 15
