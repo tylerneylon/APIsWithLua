@@ -1,8 +1,7 @@
 -- Character.lua
 --
 -- A class to capture behavior of general
--- characters. Both the player and baddies
--- may be subclasses.
+-- characters.
 --
 
 Character = {}
