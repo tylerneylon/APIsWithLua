@@ -5,7 +5,7 @@ local eatyguy = {}
 
 -- Require modules.
 
-local Baddy     = require 'Baddy'
+local Baddy = require 'Baddy'
 
 
 -- Globals.

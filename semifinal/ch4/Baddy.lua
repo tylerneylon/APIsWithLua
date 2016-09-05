@@ -31,14 +31,14 @@ end
 function Baddy:move_if_possible(grid)
   local deltas = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}}
 
-  -- Change direction if we can; otherwise the next_dir will take effect if we
-  -- hit a corner where we can turn in that direction.
+  -- Try to change direction; otherwise the next_dir will take
+  -- effect when we're at a turn in that direction.
   if self:can_move_in_dir(self.next_dir, grid) then
     set_new_dir(self, self.next_dir)
   end
 
-  -- Try to move in self.dir; if that doesn't work, randomly change
-  -- directions till we can move again.
+  -- Try to move in self.dir; if that doesn't work, randomly
+  -- change directions till we can move again.
   local can_move, new_pos = self:can_move_in_dir(self.dir, grid)
   while not can_move do
     set_new_dir(self, deltas[math.random(4)])
