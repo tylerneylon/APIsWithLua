@@ -1,3 +1,6 @@
 eatyguy6
 eatyguy7
 eatyguy8
+*.o
+*.so
+*.dll
