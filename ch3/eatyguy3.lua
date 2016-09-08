@@ -54,7 +54,7 @@ end
 local move_delta     = 0.2  -- seconds
 local next_move_time = nil
 
-local function update(state)
+local function update(key)
 
   -- Ensure any dot under the player has been eaten.
   local p = player.pos
@@ -63,20 +63,20 @@ local function update(state)
   -- Update the next direction if an arrow key was pressed.
   local dir_of_key = {left = {-1, 0}, right = {1, 0},
                       up   = {0, -1}, down  = {0, 1}}
-  local new_dir = dir_of_key[state.key]
+  local new_dir = dir_of_key[key]
   if new_dir then player.next_dir = new_dir end
 
   -- Only move every move_delta seconds.
   if next_move_time == nil then
-    next_move_time = state.clock + move_delta
+    next_move_time = timestamp() + move_delta
   end
-  if state.clock < next_move_time then return end
+  if timestamp() < next_move_time then return end
   next_move_time = next_move_time + move_delta
 
-  -- Change direction if we can; otherwise the next_dir will take effect if we
-  -- hit a corner where we can turn in that direction.
+  -- Change direction if we can; otherwise the next_dir will take effect if
+  -- we hit a corner where we can turn in that direction.
   if can_move_in_dir(player, player.next_dir) then
-    player.dir      = player.next_dir
+    player.dir = player.next_dir
   end
 
   -- Move in direction player.dir if possible.
@@ -87,7 +87,7 @@ local function update(state)
   end
 end
 
-local function draw(clock)
+local function draw()
 
   -- Choose the sprite to draw.
   -- For example, a right-facing player is drawn as either '< or '-
@@ -97,9 +97,9 @@ local function draw(clock)
     [ '0,1'] = {"^'", "|'"},
     ['0,-1'] = {"v.", "'."}
   }
-  local anim_timestep = 0.2
+  local anim_timestep = 0.1
   local dirkey   = ('%d,%d'):format(player.dir[1], player.dir[2])
-  local framekey = math.floor(clock / anim_timestep) % 2 + 1
+  local framekey = math.floor(timestamp() / anim_timestep) % 2 + 1
   local chars    = draw_data[dirkey][framekey]
 
   -- Draw the player.
@@ -153,9 +153,9 @@ function eatyguy.init()
   end
 end
 
-function eatyguy.loop(state)
-  update(state)
-  draw(state.clock)
+function eatyguy.loop(key)
+  update(key)
+  draw()
 end
 
 return eatyguy

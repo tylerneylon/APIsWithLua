@@ -2,10 +2,12 @@
 //
 // Load eatyguy3.lua and run it in the order below.
 //
+// This introduces the use of Lua tables via Lua's C API.
+//
 //   -- Lua-ish pseudocode representing the order of events.
 //   eatyguy.init()
 //   while true do
-//     eatyguy.loop(key)
+//     eatyguy.loop(state)  -- state has keys 'clock' and 'key'.
 //     sleep(0.016)
 //   end
 //
@@ -16,7 +18,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
-#include <time.h>
 #include <unistd.h>
 
 #include "lauxlib.h"
@@ -62,9 +63,9 @@ void sleephires(double sec) {
 void start() {
 
   // Terminal setup.
-  system("tput clear");      // Clear the screen.
-  system("tput civis");      // Hide the cursor.
-  system("stty raw -echo");  // Improve access to keypresses from stdin.
+  system("tput clear");  // Clear the screen.
+  system("tput civis");  // Hide the cursor.
+  system("stty raw");    // Improve access to keypresses from stdin.
 
   // Make reading from stdin non-blocking.
   fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL) | O_NONBLOCK);
@@ -73,8 +74,8 @@ void start() {
 void done() {
 
   // Put the terminal back into a decent state.
-  system("stty cooked echo");  // Undo earlier call to "stty raw".
-  system("tput reset");        // Reset terminal colors and clear the screen.
+  system("stty cooked");  // Undo earlier call to "stty raw".
+  system("tput reset");   // Reset terminal colors and clear the screen.
 
   exit(0);
 }
@@ -89,29 +90,31 @@ void push_keypress(lua_State *L, int key, int is_end_of_seq) {
   }
 }
 
+void push_state_table(lua_State *L, int key, int is_end_of_seq) {
+
+  lua_newtable(L);
+
+    // stack = [.., {}]
+
+  push_keypress(L, key, is_end_of_seq);
+
+    // stack = [.., {}, key]
+
+  lua_setfield(L, -2, "key");
+
+    // stack = [.., {key = key}]
+
+  lua_pushnumber(L, gettime());
+
+    // stack = [.., {key = key}, clock]
+
+  lua_setfield(L, -2, "clock");
+
+    // stack = [.., {key = key, clock = clock}]
+}
+
 
 // Lua-visible functions.
-
-// Lua: set_color('b' or 'g', <color>).
-int set_color(lua_State *L) {
-  const char *b_or_g = lua_tostring(L, 1);
-  int color = lua_tonumber(L, 2);
-  char cmd[1024];
-  snprintf(cmd, 1024, "tput seta%s %d", b_or_g, color);
-  system(cmd);
-  return 0;
-}
-
-// Lua: set_pos(x, y).
-int set_pos(lua_State *L) {
-  int x = lua_tonumber(L, 1);
-  int y = lua_tonumber(L, 2);
-  char cmd[1024];
-  // The 'tput cup' command accepts y before x; not a typo.
-  snprintf(cmd, 1024, "tput cup %d %d", y, x);
-  system(cmd);
-  return 0;
-}
 
 // Lua: timestamp().
 // Return a high-resolution timestamp in seconds.
@@ -131,10 +134,11 @@ int main() {
   lua_State *L = luaL_newstate();
   luaL_openlibs(L);
 
-  // Make our Lua-callable functions visible to Lua.
-  lua_register(L, "set_color", set_color);
-  lua_register(L, "set_pos",   set_pos);
+  // Set up API functions written in C.
   lua_register(L, "timestamp", timestamp);
+
+  // Set up API functions written in Lua.
+  luaL_dofile(L, "util.lua");
 
   // Load eatyguy3 and run the init() function.
   luaL_dofile(L, "eatyguy3.lua");
@@ -151,9 +155,9 @@ int main() {
     int key = getkey(&is_end_of_seq);
     if (key == 27 || key == 'q' || key == 'Q') done();
 
-    // Call eatyguy.loop(<key>).
+    // Call eatyguy.loop(state).
     lua_getfield(L, -1, "loop");
-    push_keypress(L, key, is_end_of_seq);
+    push_state_table(L, key, is_end_of_seq);
     lua_call(L, 1, 0);
 
     sleephires(0.016);  // Sleep for 16ms.

@@ -1,10 +1,2 @@
-binaries = runmodule1 runmodule2
-flags    = -llua -Llua -Ilua
-
-all: $(binaries)
-
-clean:
-	rm $(binaries)
-
-$(binaries) : % : %.c
-	cc $< -o $@ $(flags)
+binaries = eatyguy1 eatyguy2
+include ../makefile_setup

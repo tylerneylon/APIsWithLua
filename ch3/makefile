@@ -1,10 +1,2 @@
-binaries = eatyguy1 eatyguy2 eatyguy3
-flags    = -llua -Llua -Ilua
-
-all: $(binaries)
-
-clean:
-	rm $(binaries)
-
-$(binaries) : % : %.c
-	cc $< -o $@ $(flags)
+binaries = eatyguy3 eatyguy4 eatyguy5
+include ../makefile_setup

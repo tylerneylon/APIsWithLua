@@ -62,7 +62,6 @@ function eatyguy.init()
       io.write('  ')
       io.flush()  -- Colors may not work without this.
     end
-    set_color(0)    -- Avoid the remainder of the line being blue.
     io.write('\n')  -- Move cursor to next row.
   end
 end
