@@ -12,6 +12,7 @@ local Baddy = require 'Baddy'
 
 -- Expect a Pair or a table; if it's a table, convert to a Pair.
 local function pair(t)
+  -- This calls Pair:new() only if t is a table.
   return (type(t) == 'table') and Pair:new(t) or t
 end
 
@@ -43,6 +44,8 @@ local function get_nbor_dirs(pt, perc_extra)
   for _, dir in pairs(all_dirs) do
     local n_pt = pt + dir * 2  -- The nbor point.
     local is_extra_ok = (math.random(100) <= perc_extra)
+    -- Add `dir` if the nbor is not yet in a path, or if we
+    -- randomly got an extra ok using perc_extra.
     if is_in_bounds(n_pt) and
        (not grid[n_pt.x][n_pt.y] or is_extra_ok) then
       table.insert(nbor_dirs, dir)
@@ -55,6 +58,7 @@ local function drill_path_from(pt)
   grid[pt.x][pt.y] = '. '
   local nbor_dirs = get_nbor_dirs(pt)
   while #nbor_dirs > 0 do
+    -- Drill recursively in a random direction from nbor_dirs.
     local dir = table.remove(nbor_dirs, math.random(#nbor_dirs))
     grid[pt.x + dir.x][pt.y + dir.y] = '. '
     drill_path_from(pt + dir * 2)
@@ -105,9 +109,11 @@ local function draw(clock)
   local anim_timestep = 0.2
   local dirkey   = ('%d,%d'):format(player.dir[1],
                                     player.dir[2])
+  -- framekey switches between 1 & 2; basic sprite animation.
   local framekey = math.floor(clock / anim_timestep) % 2 + 1
   player.chars   = draw_data[dirkey][framekey]
 
+  -- Draw the player and baddies.
   player:draw(grid)
   for _, baddy in pairs(baddies) do
     baddy:draw(grid)
@@ -118,6 +124,7 @@ end
 
 function eatyguy.init()
 
+  -- Set up the grid size and pseudorandom number generation.
   grid_w, grid_h = 39, 23
   math.randomseed(os.time())
 

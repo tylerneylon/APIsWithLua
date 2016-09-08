@@ -28,6 +28,8 @@ local function get_nbor_dirs(x, y, perc_extra)
   for _, dir in pairs(all_dirs) do
     local nx, ny = x + 2 * dir[1], y + 2 * dir[2]
     local is_extra_ok = (math.random(100) <= perc_extra)
+    -- Add `dir` if the nbor is not yet in a path, or if we
+    -- randomly got an extra ok using perc_extra.
     if is_in_bounds(nx, ny) and
        (not grid[nx][ny] or is_extra_ok) then
       table.insert(nbor_dirs, dir)
@@ -87,9 +89,11 @@ local function draw(clock)
   local anim_timestep = 0.2
   local dirkey   = ('%d,%d'):format(player.dir[1],
                                     player.dir[2])
+  -- framekey switches between 1 & 2; basic sprite animation.
   local framekey = math.floor(clock / anim_timestep) % 2 + 1
   player.chars   = draw_data[dirkey][framekey]
 
+  -- Draw the player and baddies.
   player:draw(grid)
 end
 
@@ -97,6 +101,7 @@ end
 
 function eatyguy.init()
 
+  -- Set up the grid size and pseudorandom number generation.
   grid_w, grid_h = 39, 23
   math.randomseed(os.time())
 
