@@ -19,8 +19,8 @@ function Character:can_move_in_dir(dir, grid)
 end
 
 function Character:move_if_possible(grid)
-  -- Change direction if we can; otherwise the next_dir will take effect if we
-  -- hit a corner where we can turn in that direction.
+  -- Try to change direction; if we can't, next_dir will take
+  -- effect at a corner where we can turn in that direction.
   if self:can_move_in_dir(self.next_dir, grid) then
     self.dir = self.next_dir
   end

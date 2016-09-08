@@ -1,4 +1,3 @@
-
 // mymodule.c
 
 #include "lua.h"

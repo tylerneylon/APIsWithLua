@@ -19,7 +19,7 @@ end
 -- Globals.
 
 local percent_extra_paths = 15
-local grid                = nil
+local grid                = nil     -- grid[x][y]: falsy = wall.
 local grid_w, grid_h      = nil, nil
 local player = Character:new({pos      = pair{1, 1},
                               dir      = pair{1, 0},
@@ -35,7 +35,7 @@ local function is_in_bounds(pt)
 end
 
 local function get_nbor_dirs(pt, perc_extra)
-  -- `perc_extra` = the percent chance of including extra nbors.
+  -- perc_extra is the percent chance of including extra paths.
   perc_extra = perc_extra or 0
   local nbor_dirs = {}
   local all_dirs = {pair{1, 0}, pair{-1,  0},
@@ -44,7 +44,7 @@ local function get_nbor_dirs(pt, perc_extra)
     local n_pt = pt + dir * 2  -- The nbor point.
     local is_extra_ok = (math.random(100) <= perc_extra)
     if is_in_bounds(n_pt) and
-      (not grid[n_pt.x][n_pt.y] or is_extra_ok) then
+       (not grid[n_pt.x][n_pt.y] or is_extra_ok) then
       table.insert(nbor_dirs, dir)
     end
   end
@@ -95,7 +95,7 @@ end
 local function draw(clock)
 
   -- Choose the sprite to draw. For example, a right-facing
-  -- player is drawn as either '< or '-
+  -- player is drawn as '< alternated with '-
   local draw_data = {
     [ '1,0'] = {"'<", "'-"},
     ['-1,0'] = {">'", "-'"},
@@ -103,7 +103,8 @@ local function draw(clock)
     ['0,-1'] = {"v.", "'."}
   }
   local anim_timestep = 0.2
-  local dirkey   = ('%d,%d'):format(player.dir.x, player.dir.y)
+  local dirkey   = ('%d,%d'):format(player.dir[1],
+                                    player.dir[2])
   local framekey = math.floor(clock / anim_timestep) % 2 + 1
   player.chars   = draw_data[dirkey][framekey]
 
@@ -136,19 +137,19 @@ function eatyguy.init()
   drill_path_from(pair{1, 1})
 
   -- Draw the maze.
-  set_color('f', 7)  -- White.
+  set_color('f', 7)                  -- White foreground.
   for y = 0, grid_h + 1 do
     for x = 0, grid_w + 1 do
       if grid[x] and grid[x][y] then
-        set_color('b', 0)  -- Black; open space color.
+        set_color('b', 0)            -- Black; open space color.
         io.write(grid[x][y])
       else
-        set_color('b', 4)  -- Blue; wall color.
+        set_color('b', 4)            -- Blue; wall color.
         io.write('  ')
       end
-      io.flush()  -- Colors may not work without this.
+      io.flush()                     -- Needed for color output.
     end
-    io.write('\r\n')  -- Move cursor to next row.
+    io.write('\r\n')                 -- Move cursor to next row.
   end
 end
 

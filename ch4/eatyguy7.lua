@@ -11,7 +11,7 @@ local Baddy = require 'Baddy'
 -- Globals.
 
 local percent_extra_paths = 15
-local grid                = nil
+local grid                = nil     -- grid[x][y]: falsy = wall.
 local grid_w, grid_h      = nil, nil
 local player = Character:new({pos      = {1, 1},
                               dir      = {1, 0},
@@ -27,7 +27,7 @@ local function is_in_bounds(x, y)
 end
 
 local function get_nbor_dirs(x, y, perc_extra)
-  -- `perc_extra` = the percent chance of including extra nbors.
+  -- perc_extra is the percent chance of including extra paths.
   perc_extra = perc_extra or 0
   local nbor_dirs = {}
   local all_dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
@@ -35,7 +35,7 @@ local function get_nbor_dirs(x, y, perc_extra)
     local nx, ny = x + 2 * dir[1], y + 2 * dir[2]
     local is_extra_ok = (math.random(100) <= perc_extra)
     if is_in_bounds(nx, ny) and
-      (not grid[nx][ny] or is_extra_ok) then
+       (not grid[nx][ny] or is_extra_ok) then
       table.insert(nbor_dirs, dir)
     end
   end
@@ -86,7 +86,7 @@ end
 local function draw(clock)
 
   -- Choose the sprite to draw. For example, a right-facing
-  -- player is drawn as either '< or '-
+  -- player is drawn as '< alternated with '-
   local draw_data = {
     [ '1,0'] = {"'<", "'-"},
     ['-1,0'] = {">'", "-'"},
@@ -128,19 +128,19 @@ function eatyguy.init()
   drill_path_from(1, 1)
 
   -- Draw the maze.
-  set_color('f', 7)  -- White.
+  set_color('f', 7)                  -- White foreground.
   for y = 0, grid_h + 1 do
     for x = 0, grid_w + 1 do
       if grid[x] and grid[x][y] then
-        set_color('b', 0)  -- Black; open space color.
+        set_color('b', 0)            -- Black; open space color.
         io.write(grid[x][y])
       else
-        set_color('b', 4)  -- Blue; wall color.
+        set_color('b', 4)            -- Blue; wall color.
         io.write('  ')
       end
-      io.flush()  -- Colors may not work without this.
+      io.flush()                     -- Needed for color output.
     end
-    io.write('\r\n')  -- Move cursor to next row.
+    io.write('\r\n')                 -- Move cursor to next row.
   end
 end
 

@@ -1,3 +1,13 @@
+# Chapter 4 makefile.
+#
+# To build all the binaries for this chapter, simply run:
+# $ make
+#
+# To remove the build products, including binaries, run:
+# $ make clean
+#  
+
+# Platform-specific settings.
 ifeq ($(OS),Windows_NT)
 	# Windows.
 	flags        = -llua

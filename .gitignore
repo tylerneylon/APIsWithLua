@@ -10,3 +10,4 @@ liblua.a
 scratch.md
 *.a
 *.so
+.vimrc
