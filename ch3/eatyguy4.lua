@@ -2,14 +2,16 @@
 
 local eatyguy = {}
 
+
 -- Globals.
 
 local percent_extra_paths = 15
-local grid                = nil       -- grid[x][y] = 'open', or falsy = a wall.
+local grid                = nil     -- grid[x][y]: falsy = wall.
 local grid_w, grid_h      = nil, nil
 local player = {pos      = {1, 1},
                 dir      = {1, 0},
                 next_dir = {1, 0}}
+
 
 -- Internal functions.
 
@@ -19,13 +21,17 @@ local function is_in_bounds(x, y)
 end
 
 local function get_nbor_dirs(x, y, perc_extra)
-  perc_extra = perc_extra or 0  -- The percent chance of including extra nbors.
+  -- perc_extra is the percent chance of including extra paths.
+  perc_extra = perc_extra or 0
   local nbor_dirs = {}
   local all_dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
   for _, dir in pairs(all_dirs) do
     local nx, ny = x + 2 * dir[1], y + 2 * dir[2]
     local is_extra_ok = (math.random(100) <= perc_extra)
-    if is_in_bounds(nx, ny) and (not grid[nx][ny] or is_extra_ok) then
+    -- Add `dir` if the nbor is not yet in a path, or if we
+    -- randomly got an extra ok using perc_extra.
+    if is_in_bounds(nx, ny) and
+       (not grid[nx][ny] or is_extra_ok) then
       table.insert(nbor_dirs, dir)
     end
   end
@@ -73,10 +79,10 @@ local function update(key)
   if timestamp() < next_move_time then return end
   next_move_time = next_move_time + move_delta
 
-  -- Change direction if we can; otherwise the next_dir will take effect if we
-  -- hit a corner where we can turn in that direction.
+  -- Try to change direction; if we can't, next_dir will take
+  -- effect at a corner where we can turn in that direction.
   if can_move_in_dir(player, player.next_dir) then
-    player.dir      = player.next_dir
+    player.dir = player.next_dir
   end
 
   -- Move in direction player.dir if possible.
@@ -89,8 +95,8 @@ end
 
 local function draw()
 
-  -- Choose the sprite to draw.
-  -- For example, a right-facing player is drawn as either '< or '-
+  -- Choose the sprite to draw. For example, a right-facing
+  -- player is drawn as '< alternated with '-
   local draw_data = {
     [ '1,0'] = {"'<", "'-"},
     ['-1,0'] = {">'", "-'"},
@@ -98,8 +104,11 @@ local function draw()
     ['0,-1'] = {"v.", "'."}
   }
   local anim_timestep = 0.2
-  local dirkey   = ('%d,%d'):format(player.dir[1], player.dir[2])
-  local framekey = math.floor(timestamp() / anim_timestep) % 2 + 1
+  local dirkey   = ('%d,%d'):format(player.dir[1],
+                                    player.dir[2])
+  -- framekey switches between 1 & 2; basic sprite animation.
+  local time     = timestamp()
+  local framekey = math.floor(time / anim_timestep) % 2 + 1
   local chars    = draw_data[dirkey][framekey]
 
   -- Draw the player.
@@ -127,7 +136,7 @@ end
 
 function eatyguy.init()
 
-  --grid_w, grid_h = 65, 41
+  -- Set up the grid size and pseudorandom number generation.
   grid_w, grid_h = 39, 23
   math.randomseed(os.time())
 
@@ -137,19 +146,19 @@ function eatyguy.init()
   drill_path_from(1, 1)
 
   -- Draw the maze.
-  set_color('f', 7)  -- White.
+  set_color('f', 7)                  -- White foreground.
   for y = 0, grid_h + 1 do
     for x = 0, grid_w + 1 do
       if grid[x] and grid[x][y] then
-        set_color('b', 0)  -- Black; open space color.
+        set_color('b', 0)            -- Black; open space color.
         io.write(grid[x][y])
       else
-        set_color('b', 4)  -- Blue; wall color.
+        set_color('b', 4)            -- Blue; wall color.
         io.write('  ')
       end
-      io.flush()  -- Colors may not work without this.
+      io.flush()                     -- Needed for color output.
     end
-    io.write('\r\n')  -- Move cursor to next row.
+    io.write('\r\n')                 -- Move cursor to next row.
   end
 end
 
