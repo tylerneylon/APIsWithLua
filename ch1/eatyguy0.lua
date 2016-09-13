@@ -2,11 +2,13 @@
 
 local eatyguy = {}
 
+
 -- Globals.
 
 local percent_extra_paths = 15
-local grid                = nil     -- grid[x][y] = 'open', or falsy = a wall.
+local grid                = nil     -- grid[x][y]: falsy = wall.
 local grid_w, grid_h      = nil, nil
+
 
 -- Internal functions.
 
@@ -16,13 +18,17 @@ local function is_in_bounds(x, y)
 end
 
 local function get_nbor_dirs(x, y, perc_extra)
-  perc_extra = perc_extra or 0  -- The percent chance to include extra nbors.
+  -- perc_extra is the percent chance of including extra paths.
+  perc_extra = perc_extra or 0
   local nbor_dirs = {}
   local all_dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
   for _, dir in pairs(all_dirs) do
     local nx, ny = x + 2 * dir[1], y + 2 * dir[2]
     local is_extra_ok = (math.random(100) <= perc_extra)
-    if is_in_bounds(nx, ny) and (not grid[nx][ny] or is_extra_ok) then
+    -- Add `dir` if the nbor is not yet in a path, or if we
+    -- randomly got an extra ok using perc_extra.
+    if is_in_bounds(nx, ny) and
+       (not grid[nx][ny] or is_extra_ok) then
       table.insert(nbor_dirs, dir)
     end
   end
@@ -43,7 +49,9 @@ end
 -- Public functions.
 
 function eatyguy.init()
-  grid_w, grid_h = 65, 41
+
+  -- Set up the grid size and pseudorandom number generation.
+  grid_w, grid_h = 39, 23
   math.randomseed(os.time())
 
   -- Build the maze.
@@ -54,7 +62,7 @@ function eatyguy.init()
   -- Draw the maze.
   for y = 0, grid_h + 1 do
     for x = 0, grid_w + 1 do
-      -- The next line is essentially: chars = (grid[x][y] ? '  ' : '##').
+      -- This line is like: chars = (grid[x][y] ? '  ' : '##').
       local chars = (grid[x] and grid[x][y]) and '  ' or '##'
       io.write(chars)
     end
