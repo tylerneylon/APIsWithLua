@@ -11,7 +11,10 @@
 //     sleep(0.016)
 //   end
 //
-//
+
+#include "lauxlib.h"
+#include "lua.h"
+#include "lualib.h"
 
 #include <fcntl.h>
 #include <math.h>
@@ -20,10 +23,6 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
-
-#include "lauxlib.h"
-#include "lua.h"
-#include "lualib.h"
 
 
 // Internal functions.
@@ -66,17 +65,18 @@ void start() {
   // Terminal setup.
   system("tput clear");      // Clear the screen.
   system("tput civis");      // Hide the cursor.
-  system("stty raw -echo");  // Improve access to keypresses from stdin.
+  system("stty raw -echo");  // Improve access to keypresses.
 
   // Make reading from stdin non-blocking.
-  fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL) | O_NONBLOCK);
+  int flags = fcntl(STDIN_FILENO, F_GETFL);
+  fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 }
 
 void done() {
 
   // Put the terminal back into a decent state.
-  system("stty cooked echo");  // Undo earlier call to "stty raw".
-  system("tput reset");        // Reset terminal colors and clear the screen.
+  system("stty cooked echo");  // Undo init call to "stty raw".
+  system("tput reset");        // Reset colors and clear screen.
 
   exit(0);
 }
@@ -84,14 +84,17 @@ void done() {
 void push_keypress(lua_State *L, int key, int is_end_of_seq) {
   if (is_end_of_seq && 65 <= key && key <= 68) {
     // up, down, right, left = 65, 66, 67, 68
-    static const char *arrow_names[] = {"up", "down", "right", "left"};
+    static const char *arrow_names[] = {"up", "down",
+                                        "right", "left"};
     lua_pushstring(L, arrow_names[key - 65]);
   } else {
     lua_pushnumber(L, key);
   }
 }
 
-void push_state_table(lua_State *L, int key, int is_end_of_seq) {
+void push_state_table(lua_State *L,
+                      int key,
+                      int is_end_of_seq) {
 
   lua_newtable(L);
 
