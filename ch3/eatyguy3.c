@@ -93,12 +93,12 @@ void push_keypress(lua_State *L, int key, int is_end_of_seq) {
 
 // Lua-visible functions.
 
-// Lua: set_color('b' or 'g', <color>).
+// Lua: set_color('b' or 'f', <color>).
 int set_color(lua_State *L) {
-  const char *b_or_g = lua_tostring(L, 1);
+  const char *b_or_f = lua_tostring(L, 1);
   int color = lua_tonumber(L, 2);
   char cmd[1024];
-  snprintf(cmd, 1024, "tput seta%s %d", b_or_g, color);
+  snprintf(cmd, 1024, "tput seta%s %d", b_or_f, color);
   system(cmd);
   return 0;
 }

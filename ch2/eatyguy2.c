@@ -4,15 +4,15 @@
 // followed by eatyguy.loop() in a loop.
 //
 
+#include "lauxlib.h"
+#include "lua.h"
+#include "lualib.h"
+
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
-
-#include "lauxlib.h"
-#include "lua.h"
-#include "lualib.h"
 
 
 // Internal functions.
@@ -28,17 +28,18 @@ void start() {
   // Terminal setup.
   system("tput clear");      // Clear the screen.
   system("tput civis");      // Hide the cursor.
-  system("stty raw -echo");  // Improve access to keypresses from stdin.
+  system("stty raw -echo");  // Improve access to keypresses.
 
   // Make reading from stdin non-blocking.
-  fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL) | O_NONBLOCK);
+  int flags = fcntl(STDIN_FILENO, F_GETFL);
+  fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 }
 
 void done() {
 
   // Put the terminal back into a decent state.
-  system("stty cooked echo");  // Undo earlier call to "stty raw".
-  system("tput reset");        // Reset terminal colors and clear the screen.
+  system("stty cooked echo");  // Undo init call to "stty raw".
+  system("tput reset");        // Reset colors and clear screen.
 
   exit(0);
 }
@@ -46,12 +47,12 @@ void done() {
 
 // Lua-visible functions.
 
-// Lua: set_color('b' or 'g', <color>).
+// Lua: set_color('b' or 'f', <color>).
 int set_color(lua_State *L) {
-  const char *f_or_g = lua_tostring(L, 1);
+  const char *b_or_f = lua_tostring(L, 1);
   int color = lua_tonumber(L, 2);
   char cmd[1024];
-  snprintf(cmd, 1024, "tput seta%s %d", f_or_g, color);
+  snprintf(cmd, 1024, "tput seta%s %d", b_or_f, color);
   system(cmd);
   return 0;
 }
@@ -94,6 +95,7 @@ int main() {
   luaL_dofile(L, "eatyguy2.lua");
   lua_setglobal(L, "eatyguy");
   lua_settop(L, 0);
+
   lua_getglobal(L, "eatyguy");
   lua_getfield(L, -1, "init");  // -1 means stack top.
   lua_call(L, 0, 0);            // 0, 0 = #args, #retvals

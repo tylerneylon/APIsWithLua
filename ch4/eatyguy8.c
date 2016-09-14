@@ -2,8 +2,6 @@
 //
 // Load eatyguy8.lua and run it in the order below.
 //
-// This introduces the use of Lua tables via Lua's C API.
-//
 //   -- Lua-ish pseudocode representing the order of events.
 //   eatyguy.init()
 //   while true do

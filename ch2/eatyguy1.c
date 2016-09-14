@@ -3,11 +3,11 @@
 // Loads eatyguy1.lua and runs eatyguy.init().
 //
 
-#include <stdlib.h>
-
 #include "lauxlib.h"
 #include "lua.h"
 #include "lualib.h"
+
+#include <stdlib.h>
 
 
 // Lua-visible functions.
