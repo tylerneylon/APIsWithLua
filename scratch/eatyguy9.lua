@@ -70,9 +70,11 @@ local function drill_path_from(pt)
 end
 
 local function check_for_death()
-  -- TODO
-  -- Check for any collisions between the player and baddies.
-  -- If there is a collision, end the game by setting end_msg.
+  for _, baddy in pairs(baddies) do
+    if pair(player.pos) == pair(baddy.pos) then
+      end_msg = 'Game over!'
+    end
+  end
 end
 
 local move_delta     = 0.2  -- seconds
