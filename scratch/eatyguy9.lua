@@ -26,6 +26,9 @@ local player = Character:new({pos      = pair{1, 1},
                               dir      = pair{1, 0},
                               next_dir = pair{1, 0}})
 local baddies = {}
+-- The game ends as soon as end_msg is set to any string; that string will be
+-- printed to the user as a farewell message.
+local end_msg = nil
 
 
 -- Internal functions.
@@ -66,6 +69,12 @@ local function drill_path_from(pt)
   end
 end
 
+local function check_for_death()
+  -- TODO
+  -- Check for any collisions between the player and baddies.
+  -- If there is a collision, end the game by setting end_msg.
+end
+
 local move_delta     = 0.2  -- seconds
 local next_move_time = nil
 
@@ -91,9 +100,14 @@ local function update(state)
   -- It's been at least move_delta seconds since the last
   -- time things moved, so let's move them now!
   player:move_if_possible(grid)
+  -- Check for player/baddy collisions both here and after baddies have moved.
+  -- If there was only one check, it could miss the case where the player and
+  -- baddy are facing each other and cross each others' paths.
+  check_for_death()
   for _, baddy in pairs(baddies) do
     baddy:move_if_possible(grid)
   end
+  check_for_death()
 end
 
 local function draw(clock)
@@ -163,6 +177,7 @@ end
 function eatyguy.loop(state)
   update(state)
   draw(state.clock)
+  return end_msg
 end
 
 return eatyguy

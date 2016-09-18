@@ -72,11 +72,14 @@ void start() {
   fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 }
 
-void done() {
+void done(const char *msg) {
 
   // Put the terminal back into a decent state.
   system("stty cooked echo");  // Undo init call to "stty raw".
   system("tput reset");        // Reset colors and clear screen.
+
+  // Print the farewell message if there is one.
+  if (msg) printf("%s\n", msg);
 
   exit(0);
 }
@@ -161,12 +164,21 @@ int main() {
   while (1) {
     int is_end_of_seq;
     int key = getkey(&is_end_of_seq);
-    if (key == 27 || key == 'q' || key == 'Q') done();
+    if (key == 27 || key == 'q' || key == 'Q') done(NULL);
 
     // Call eatyguy.loop(state).
     lua_getfield(L, -1, "loop");
     push_state_table(L, key, is_end_of_seq);
-    lua_call(L, 1, 0);
+    lua_call(L, 1, 1);
+
+    // Check to see if the game is over.
+    if (lua_isstring(L, -1)) {
+      const char *msg = lua_tostring(L, -1);
+      done(msg);
+    }
+
+    // Pop the return value of eatyguy.loop() off the stack.
+    lua_pop(L, 1);
 
     sleephires(0.016);  // Sleep for 16ms.
   }
