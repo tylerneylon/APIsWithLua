@@ -46,6 +46,7 @@ local function drill_path_from(x, y)
   end
 end
 
+
 -- Public functions.
 
 function eatyguy.init()

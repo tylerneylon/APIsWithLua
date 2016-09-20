@@ -1,7 +1,7 @@
 // loadmodule.c
 //
-// Loads mymodule.lua but doesn't call any
-// functions in it.
+// Loads mymodule.lua but doesn't call any functions in it.
+//
 
 #include "lauxlib.h"
 #include "lua.h"
