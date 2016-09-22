@@ -38,7 +38,7 @@ else
 	mm_make      = cc -std=c99 mymodule.c -o mymodule.so $(soflags)
 endif
 
-files = eatyguy9 eatyguy10 Pair.o
+files = eatyguy9 Pair.o
 
 cc = cc -std=c99
 
@@ -50,9 +50,6 @@ clean:
 	rm -f $(all) *.o
 
 eatyguy9: eatyguy9.c $(lualib) Pair.o
-	$(cc) $< -o $@ Pair.o $(flags)
-
-eatyguy10: eatyguy10.c $(lualib) Pair.o
 	$(cc) $< -o $@ Pair.o $(flags)
 
 ../lua/liblua.a:
