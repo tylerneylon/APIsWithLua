@@ -38,7 +38,9 @@ else
 	mm_make      = cc -std=c99 mymodule.c -o mymodule.so $(soflags)
 endif
 
-files = eatyguy9 Pair.o
+simple_lua = lua_error lua_pcall
+
+files = eatyguy9 Pair.o $(simple_lua)
 
 cc = cc -std=c99
 
@@ -51,6 +53,9 @@ clean:
 
 eatyguy9: eatyguy9.c $(lualib) Pair.o
 	$(cc) $< -o $@ Pair.o $(flags)
+
+$(simple_lua) : % : %.c $(lualib)
+	$(cc) $< -o $@ $(flags)
 
 ../lua/liblua.a:
 	make -C ../lua liblua.a $(luaflags)
