@@ -46,7 +46,7 @@ mt.__newindex = function (t, k, v)
   if not mt.__declared[k] then
     local w = what()
     if w ~= 'main' and w ~= 'C' then
-      fmt = 'Attempt to assign to undeclared global "%s"'
+      local fmt = 'Attempt to assign to undeclared global "%s"'
       -- The parameter 2 will blame the error on the code making
       -- the bad assignment; i.e. the caller of __newindex().
       error(fmt:format(k), 2)

@@ -9,16 +9,14 @@ This is based on all of those influences.
 
 --]]
 
-local mt = getmetatable(_G)
+local strict = {}
 
--- This module adds hooks so that every global assignment
--- results in a call to mt.__newindex(), and every failed global
--- variable lookup results in a call to mt.__index(). This hooks
--- live in the metatable of _G, the table of all globals.
-if mt == nil then
-  mt = {}
-  setmetatable(_G, mt)
+for k, v in pairs(_G) do
+  strict[k] = v
 end
+
+mt = {}
+setmetatable(strict, mt)
 
 -- This will hold all known global names as keys. This is useful
 -- because it remembers values that have been declared, but
@@ -27,7 +25,7 @@ mt.__declared = {}
 
 local function what ()
   -- The user code will be at level 3 in the stack when this
-  -- calls debug.getinfo(). This text diagram dhows how the user
+  -- calls debug.getinfo(). This text diagram shows how the user
   -- code counts as level 3:
   --     Code:  <user> -> mt.fn() -> what() -> debug.get_info()
   --     Level:   3         2          1            0
@@ -43,10 +41,13 @@ end
 
 -- Throw an error for global assigments in non-main Lua code.
 mt.__newindex = function (t, k, v)
+  print(('__newindex(%s, %s, %s)'):format(tostring(t),
+        tostring(k), tostring(v)))
   if not mt.__declared[k] then
     local w = what()
+    print('  w = ' .. w)
     if w ~= 'main' and w ~= 'C' then
-      fmt = 'Attempt to assign to undeclared global "%s"'
+      local fmt = 'Attempt to assign to undeclared global "%s"'
       -- The parameter 2 will blame the error on the code making
       -- the bad assignment; i.e. the caller of __newindex().
       error(fmt:format(k), 2)
@@ -67,3 +68,5 @@ mt.__index = function (t, k)
   -- We won't always get an error; finish the lookup on key k.
   return rawget(t, k)
 end
+
+return strict

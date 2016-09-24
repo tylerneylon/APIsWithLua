@@ -8,6 +8,11 @@ local eatyguy = {}
 local Baddy = require 'Baddy'
 
 
+-- Enter strict mode.
+
+require 'strict'
+
+
 -- Convenience functions.
 
 -- Expect a Pair or a table; if it's a table, convert to a Pair.
