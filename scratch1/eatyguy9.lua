@@ -5,12 +5,13 @@ local eatyguy = {}
 
 -- Require modules.
 
-local Baddy = require 'Baddy'
+local Baddy  = require 'Baddy'
+local strict = require 'strict'
 
 
 -- Enter strict mode.
 
-require 'strict'
+local _ENV = strict.new_env()
 
 
 -- Convenience functions.
@@ -31,8 +32,8 @@ local player = Character:new({pos      = pair{1, 1},
                               dir      = pair{1, 0},
                               next_dir = pair{1, 0}})
 local baddies = {}
--- The game ends as soon as end_msg is set to any string; that string will be
--- printed to the user as a farewell message.
+-- The game ends as soon as end_msg is set to any string; that
+-- string will be printed to the user as a farewell message.
 local end_msg = nil
 
 
@@ -77,7 +78,7 @@ end
 local function check_for_death()
   for _, baddy in pairs(baddies) do
     if pair(player.pos) == pair(baddy.pos) then
-      end_msg = 'Game over!'
+      end_mgs = 'Game over!'
     end
   end
 end
@@ -107,9 +108,9 @@ local function update(state)
   -- It's been at least move_delta seconds since the last
   -- time things moved, so let's move them now!
   player:move_if_possible(grid)
-  -- Check for player/baddy collisions both here and after baddies have moved.
-  -- If there was only one check, it could miss the case where the player and
-  -- baddy are facing each other and cross each others' paths.
+  -- Check for baddy collisions both now and after baddies have
+  -- moved. With only one check, it may miss the case where both
+  -- player and baddy move past each other in one time step.
   check_for_death()
   for _, baddy in pairs(baddies) do
     baddy:move_if_possible(grid)

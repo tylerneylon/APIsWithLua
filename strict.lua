@@ -12,6 +12,13 @@ their code will throw an error on either of these conditions:
    as within a function, or
  * An undeclared global is referenced.
 
+Alternatively, call:
+
+    strict.add_checks(_G)
+
+to throw errors on all bad global name uses, not just for the
+current file.
+
 There are a number of files similar to this one available
 online, as well as described in the Programming in Lua book.
 This happens to be a version that I like.
@@ -20,18 +27,20 @@ This happens to be a version that I like.
 
 local strict = {}
 
--- This returns a replacement for _ENV that detects errors.
-function strict.new_env()
+-- This replaces the __index and __newindex metamethods on the
+-- given table; this is designed for use with env set to either
+-- _ENV or _G.
+function strict.add_checks(env)
 
-  -- Set up the new environment with the values from _ENV.
-  local env = {}
-  for key, value in pairs(_ENV) do
-    env[key] = value
+  -- Get t's metatable, creating it if needed.
+  local mt = getmetatable(env)
+  if mt == nil then
+    mt = {}
+    setmetatable(env, mt)
   end
 
-  -- Set up env's metatable. Define the metamethods inline so
-  -- they can refer to `declared` as an upvalue.
-  local mt = {}
+  -- Set up the declared table to be an upvalue for the __index
+  -- and __newindex closures created below.
   local declared = {}
 
   -- Throw an error for global assigments in non-main Lua code.
@@ -63,9 +72,20 @@ function strict.new_env()
     -- We won't always get an error; finish the lookup on key k.
     return rawget(t, k)
   end
+end
 
-  -- Return the new environment `env`.
-  return setmetatable(env, mt)
+-- This returns a replacement for _ENV that detects errors.
+function strict.new_env()
+
+  -- Set up the new environment with the values from _ENV.
+  local env = {}
+  for key, value in pairs(_ENV) do
+    env[key] = value
+  end
+
+  -- Add the checks and return the new environment.
+  strict.add_checks(env)
+  return env
 end
 
 return strict

@@ -1,4 +1,4 @@
--- remain_calm.lua
+-- keep_calm.lua
 
 local function low()
   error('thrown from low')

@@ -1,7 +1,5 @@
 local strict = require('strict')
 
-local _ENV = strict.new_env()
-
 local bad = {}
 
 function bad.f()
