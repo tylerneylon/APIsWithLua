@@ -18,12 +18,12 @@ ifeq ($(OS),Windows_NT)
 	mm_make      = cc -std=c99 -c mymodule.c -o mymodule.o && cc -shared mymodule.o -o mymodule.dll -llua
 else ifeq ($(shell uname),Darwin)
 	# macOS.
-	cflags       = -I../lua
-	flags        = -llua -L../lua $(cflags)
-	lualib       = ../lua/liblua.a
+	cflags       = -I../../lua
+	flags        = -llua -L../../lua $(cflags)
+	lualib       = ../../lua/liblua.a
 	luaflags     = SYSCFLAGS="-DLUA_USE_MACOSX"
 	soext        = so
-	soflags      = -undefined dynamic_lookup -I../lua
+	soflags      = -undefined dynamic_lookup -I../../lua
 	pair_so_make = Pair.c -o Pair.so $(soflags)
 	mm_make      = cc -std=c99 mymodule.c -o mymodule.so $(soflags)
 else
@@ -52,8 +52,8 @@ clean:
 eatyguy10: eatyguy10.c $(lualib) Pair.o
 	$(cc) $< -o $@ Pair.o $(flags)
 
-../lua/liblua.a:
-	make -C ../lua liblua.a $(luaflags)
+../../lua/liblua.a:
+	make -C ../../lua liblua.a $(luaflags)
 
 Pair.o: Pair.c Pair.h
 	$(cc) -c $< -o $@ $(cflags)
