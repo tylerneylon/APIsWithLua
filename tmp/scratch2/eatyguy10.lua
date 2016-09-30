@@ -5,8 +5,9 @@ local eatyguy = {}
 
 -- Require modules.
 
-local Baddy  = require 'Baddy'
-local strict = require 'strict'
+local Baddy     = require 'Baddy'
+local UserBaddy = require 'UserBaddy'
+local strict    = require 'strict'
 
 
 -- Enter strict mode.
@@ -78,7 +79,7 @@ end
 local function check_for_death()
   for _, baddy in pairs(baddies) do
     if pair(player.pos) == pair(baddy.pos) then
-      end_mgs = 'Game over!'
+      end_msg = 'Game over!'
     end
   end
 end
@@ -113,7 +114,7 @@ local function update(state)
   -- player and baddy move past each other in one time step.
   check_for_death()
   for _, baddy in pairs(baddies) do
-    baddy:move_if_possible(grid)
+    baddy:move_if_possible(grid, player)
   end
   check_for_death()
 end
@@ -151,13 +152,16 @@ function eatyguy.init()
   math.randomseed(os.time())
 
   -- Set up the baddies.
-  local baddy_info = { {color = 1, chars = 'oo', pos = {1, 1}},
-                       {color = 2, chars = '@@', pos = {1, 0}},
-                       {color = 5, chars = '^^', pos = {0, 1}} }
+  local baddy_info = { {color = 1, chars = 'oo', pos = {1, 1},
+                        script = 'user_baddy1.lua'},
+                       {color = 2, chars = '@@', pos = {1, 0},
+                        script = 'user_baddy1.lua'},
+                       {color = 5, chars = '^^', pos = {0, 1},
+                        script = 'user_baddy1.lua'} }
   for _, info in pairs(baddy_info) do
     info.home = pair{(grid_w - 1) * info.pos[1] + 1,
                      (grid_h - 1) * info.pos[2] + 1}
-    table.insert(baddies, Baddy:new(info))
+    table.insert(baddies, UserBaddy:new(info))
   end
 
   -- Build the maze.

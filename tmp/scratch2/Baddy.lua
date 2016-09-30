@@ -15,7 +15,7 @@ local function set_new_dir(baddy, new_dir)
   baddy.next_dir = {sign * baddy.dir[2], -sign * baddy.dir[1]}
 end
 
-Baddy = Character:new()
+local Baddy = Character:new()
 
 -- Set up a new baddy.
 -- This expects a table with keys {home, color, chars}.
