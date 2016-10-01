@@ -151,34 +151,19 @@ int main() {
   luaopen_Pair(L);
   lua_setglobal(L, "Pair");
 
-  fprintf(stderr, "[[1]]\n");
-
   // Set up API functions written in Lua.
   luaL_dofile(L, "util.lua");
   luaL_dofile(L, "Character.lua");
   lua_setglobal(L, "Character");
-
-  fprintf(stderr, "[[2]]\n");
 
   // Load eatyguy10 and run the init() function.
   luaL_dofile(L, "eatyguy10.lua");
   lua_setglobal(L, "eatyguy");
   lua_settop(L, 0);
 
-  fprintf(stderr, "[[3]]\n");
-
   lua_getglobal(L, "eatyguy");
   lua_getfield(L, -1, "init");  // -1 means stack top.
   lua_call(L, 0, 0);            // 0, 0 = #args, #retvals
-
-  fprintf(stderr, "[[4]]\n");
-
-  /*
-  lua_pushcfunction(L, msg_handler);
-  fprintf(stderr, "msg_handler is at stack position %d\n",
-          lua_gettop(L));
-  exit(0);
-  */
 
   lua_getglobal(L, "eatyguy");
   while (1) {
@@ -189,8 +174,7 @@ int main() {
     // Call eatyguy.loop(state).
     lua_getfield(L, -1, "loop");
     push_state_table(L, key, is_end_of_seq);
-    //lua_call(L, 1, 1);
-    lua_pcall(L, 1, 1, 0);
+    lua_call(L, 1, 1);
 
     // Check to see if the game is over.
     if (lua_isstring(L, -1)) {

@@ -153,9 +153,9 @@ function eatyguy.init()
 
   -- Set up the baddies.
   local baddy_info = { {color = 1, chars = 'oo', pos = {1, 1},
-                        script = 'user_baddy1.lua'},
+                        script = 'user_baddy2.lua'},
                        {color = 2, chars = '@@', pos = {1, 0},
-                        script = 'user_baddy1.lua'},
+                        script = 'user_baddy2.lua'},
                        {color = 5, chars = '^^', pos = {0, 1},
                         script = 'user_baddy1.lua'} }
   for _, info in pairs(baddy_info) do
