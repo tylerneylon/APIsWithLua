@@ -12,7 +12,7 @@ local cached_strs = {}  -- Maps cmd -> str.
 
 local function cached_cmd(cmd)
   if not cached_strs[cmd] then
-    p = io.popen(cmd)
+    local p = io.popen(cmd)
     cached_strs[cmd] = p:read()
     p:close()
   end
