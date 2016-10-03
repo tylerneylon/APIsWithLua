@@ -31,3 +31,11 @@ end
 function set_pos(x, y)
   cached_cmd(('tput cup %d %d'):format(y, x))
 end
+
+-- Expect a Pair or a table; if it's a table, convert to a Pair.
+function pair(t)
+  -- This calls Pair:new() only if t is a table.
+  return (type(t) == 'table') and Pair:new(t) or t
+end
+
+

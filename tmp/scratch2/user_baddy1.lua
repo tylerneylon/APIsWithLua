@@ -1,11 +1,5 @@
 -- user_baddy1.lua
 
--- Expect a Pair or a table; if it's a table, convert to a Pair.
-local function pair(t)
-  -- This calls Pair:new() only if t is a table.
-  return (type(t) == 'table') and Pair:new(t) or t
-end
-
 local dir = pair {1, 0}
 
 -- Return true iff either we can no longer move forward, or if

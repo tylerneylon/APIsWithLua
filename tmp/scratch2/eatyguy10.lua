@@ -15,15 +15,6 @@ local strict    = require 'strict'
 local _ENV = strict.new_env()
 
 
--- Convenience functions.
-
--- Expect a Pair or a table; if it's a table, convert to a Pair.
-local function pair(t)
-  -- This calls Pair:new() only if t is a table.
-  return (type(t) == 'table') and Pair:new(t) or t
-end
-
-
 -- Globals.
 
 local percent_extra_paths = 15

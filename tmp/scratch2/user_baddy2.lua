@@ -1,10 +1,4 @@
--- user_baddy1.lua
-
--- Expect a Pair or a table; if it's a table, convert to a Pair.
-local function pair(t)
-  -- This calls Pair:new() only if t is a table.
-  return (type(t) == 'table') and Pair:new(t) or t
-end
+-- user_baddy2.lua
 
 local function dot(a, b)
   return a[1] * b[1] + a[2] * b[2]
@@ -36,7 +30,6 @@ local function is_turning_point(possible_dirs)
 
   return can_turn or not can_go_straight, straight_i
 end
-
 
 return function (baddy, possible_dirs, grid, player)
 
