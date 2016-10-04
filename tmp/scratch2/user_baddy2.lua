@@ -58,10 +58,4 @@ return function (baddy, possible_dirs, grid, player)
   end
   dir = possible_dirs[choice_i]
   return choice_i
-
-  --[[
-  local i = math.random(#possible_dirs)
-  dir = possible_dirs[i]
-  return i
-  --]]
 end
