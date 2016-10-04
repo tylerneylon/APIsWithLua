@@ -61,7 +61,8 @@ void sleephires(double sec) {
 void start() {
 
   // Terminal setup.
-  system("tput clear");      // Clear the screen.
+  // XXX
+  //system("tput clear");      // Clear the screen.
   system("tput civis");      // Hide the cursor.
   system("stty raw -echo");  // Improve access to keypresses.
 
@@ -74,7 +75,10 @@ void done() {
 
   // Put the terminal back into a decent state.
   system("stty cooked echo");  // Undo init call to "stty raw".
-  system("tput reset");        // Reset colors and clear screen.
+  // XXX
+  system("tput sgr0");   // Reset colors only.
+  system("tput cnorm");  // Make the cursor visible.
+  //system("tput reset");        // Reset colors and clear screen.
 
   exit(0);
 }
@@ -125,6 +129,9 @@ int main() {
   lua_getglobal(L, "eatyguy");
   lua_getfield(L, -1, "init");  // -1 means stack top.
   lua_call(L, 0, 0);            // 0, 0 = #args, #retvals
+
+  // XXX
+  done();
 
   lua_getglobal(L, "eatyguy");
   while (1) {
