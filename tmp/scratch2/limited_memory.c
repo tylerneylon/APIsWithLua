@@ -5,13 +5,25 @@
 #include "lua.h"
 #include "lualib.h"
 
+#include <stdio.h>
+#include <stdlib.h>
 
 // TODO Actually limit memory.
 //      For now I'm just starting with a
 //      simple interpreter.
 
+void *alloc(void *ud,
+            void *ptr,
+            size_t osize,
+            size_t nsize) {
+  printf("alloc(%p, %zd, %zd)\n", ptr, osize, nsize);
+  if (nsize) return realloc(ptr, nsize);
+  free(ptr);
+  return NULL;
+}
+
 int main() {
-  lua_State *L = luaL_newstate();
+  lua_State *L = lua_newstate(alloc, NULL);
   luaL_openlibs(L);
 
   char buff[2048];
