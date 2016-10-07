@@ -12,13 +12,24 @@
 //      For now I'm just starting with a
 //      simple interpreter.
 
+long long diff = 0;
+
 void *alloc(void *ud,
             void *ptr,
             size_t osize,
             size_t nsize) {
   printf("alloc(%p, %zd, %zd)\n", ptr, osize, nsize);
-  if (nsize) return realloc(ptr, nsize);
+  if (ptr) {
+    diff += (nsize - osize);
+  } else {
+    diff += nsize;
+  }
+  if (nsize) {
+    printf("diff is now %lld\n", diff);
+    return realloc(ptr, nsize);
+  }
   free(ptr);
+  printf("diff is now %lld\n", diff);
   return NULL;
 }
 
