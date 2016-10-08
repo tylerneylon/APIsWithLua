@@ -1,4 +1,4 @@
-// limited_memory.c
+// track_memory.c
 //
 
 #include "lauxlib.h"
@@ -8,29 +8,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// TODO Actually limit memory.
-//      For now I'm just starting with a
-//      simple interpreter.
-
-long long diff = 0;
+long bytes_alloced = 0;
 
 void *alloc(void *ud,
             void *ptr,
             size_t osize,
             size_t nsize) {
-  printf("alloc(%p, %zd, %zd)\n", ptr, osize, nsize);
-  if (ptr) {
-    diff += (nsize - osize);
-  } else {
-    diff += nsize;
-  }
-  if (nsize) {
-    printf("diff is now %lld\n", diff);
-    return realloc(ptr, nsize);
-  }
+  bytes_alloced += nsize - (ptr ? osize : 0);
+  if (nsize) return realloc(ptr, nsize);
   free(ptr);
-  printf("diff is now %lld\n", diff);
   return NULL;
+}
+
+char *line(char *buff, int size) {
+  printf("%ld bytes allocated\n", bytes_alloced);
+  printf("> ");
+  return fgets(buff, size, stdin);
 }
 
 int main() {
@@ -38,7 +31,7 @@ int main() {
   luaL_openlibs(L);
 
   char buff[2048];
-  while (fgets(buff, sizeof(buff), stdin)) {
+  while (line(buff, sizeof(buff))) {
     int error = luaL_loadstring(L, buff);
     if (!error) error = lua_pcall(L, 0, 0, 0);
     if (error) {
@@ -48,5 +41,6 @@ int main() {
   }
 
   lua_close(L);
+  printf("\n%ld bytes allocated\n", bytes_alloced);
   return 0;
 }
