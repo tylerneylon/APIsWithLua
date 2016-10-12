@@ -17,32 +17,34 @@ local function is_in_bounds(x, y)
           1 <= y and y <= grid_h)
 end
 
-local function get_nbor_dirs(x, y, perc_extra)
+local function get_nbor_directions(x, y, perc_extra)
   -- perc_extra is the percent chance of including extra paths.
   perc_extra = perc_extra or 0
-  local nbor_dirs = {}
-  local all_dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
-  for _, dir in pairs(all_dirs) do
-    local nx, ny = x + 2 * dir[1], y + 2 * dir[2]
+  local nbor_directions = {}
+  local all_directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
+  for _, direction in pairs(all_directions) do
+    local nx, ny = x + 2 * direction[1], y + 2 * direction[2]
     local is_extra_ok = (math.random(100) <= perc_extra)
-    -- Add `dir` if the nbor is not yet in a path, or if we
-    -- randomly got an extra ok using perc_extra.
+    -- Add `direction` if the nbor is not yet in a path, or if
+    -- we randomly got an extra ok using perc_extra.
     if is_in_bounds(nx, ny) and
        (not grid[nx][ny] or is_extra_ok) then
-      table.insert(nbor_dirs, dir)
+      table.insert(nbor_directions, direction)
     end
   end
-  return nbor_dirs
+  return nbor_directions
 end
 
 local function drill_path_from(x, y)
   grid[x][y] = 'open'
-  local nbor_dirs = get_nbor_dirs(x, y)
-  while #nbor_dirs > 0 do
-    local dir = table.remove(nbor_dirs, math.random(#nbor_dirs))
-    grid[x + dir[1]][y + dir[2]] = 'open'
-    drill_path_from(x + 2 * dir[1], y + 2 * dir[2])
-    nbor_dirs = get_nbor_dirs(x, y, percent_extra_paths)
+  local nbor_directions = get_nbor_directions(x, y)
+  while #nbor_directions > 0 do
+    local direction = table.remove(nbor_directions,
+                          math.random(#nbor_directions))
+    grid[x + direction[1]][y + direction[2]] = 'open'
+    drill_path_from(x + 2 * direction[1], y + 2 * direction[2])
+    nbor_directions = get_nbor_directions(x, y,
+                                          percent_extra_paths)
   end
 end
 
