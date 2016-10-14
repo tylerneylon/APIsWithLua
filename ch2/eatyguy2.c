@@ -14,6 +14,8 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+// 27 is the decimal representation of Escape in ASCII.
+#define ESC_KEY 27
 
 // Internal functions.
 
@@ -30,7 +32,7 @@ void start() {
   system("tput civis");      // Hide the cursor.
   system("stty raw -echo");  // Improve access to keypresses.
 
-  // Make reading from stdin non-blocking.
+  // Modify stdin's file descriptor to make reads non-blocking.
   int flags = fcntl(STDIN_FILENO, F_GETFL);
   fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 }
@@ -107,7 +109,7 @@ int main() {
     lua_call(L, 0, 0);
 
     int c = getchar();
-    if (c == 27 || c == 'q' || c == 'Q') done();
+    if (c == ESC_KEY || c == 'q' || c == 'Q') done();
   }
 
   return 0;

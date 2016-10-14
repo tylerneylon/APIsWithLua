@@ -70,7 +70,8 @@ function eatyguy.init()
       io.write('  ')
       io.flush()                     -- Needed for color output.
     end
-    io.write('\r\n')                 -- Move cursor to next row.
+    set_color('b', 0)                -- End the lines in black.
+    io.write(' \r\n')                -- Move cursor to next row.
   end
 end
 

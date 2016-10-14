@@ -17,7 +17,7 @@ int set_color(lua_State *L) {
   char cmd[1024];
   snprintf(cmd, 1024, "tput setab %d", color);
   system(cmd);
-  return 0;
+  return 0;  // 0 is the number of Lua-visible return values.
 }
 
 

@@ -52,9 +52,10 @@ end
 -- Check whether a character can move in a given direction.
 -- Return can_move, new_pos.
 local function can_move_in_dir(character, dir)
-  local p = character.pos
-  local gx, gy = p[1] + dir[1], p[2] + dir[2]
-  return (grid[gx] and grid[gx][gy]), {gx, gy}
+  local pos = character.pos
+  local grid_x, grid_y = pos[1] + dir[1], pos[2] + dir[2]
+  local can_move = grid[grid_x] and grid[grid_x][grid_y]
+  return can_move, {grid_x, grid_y}
 end
 
 local move_delta     = 0.2  -- seconds
