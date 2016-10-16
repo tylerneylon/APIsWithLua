@@ -70,7 +70,6 @@ void sleephires(double sec) {
 }
 
 void start() {
-
   // Terminal setup.
   system("tput clear");      // Clear the screen.
   system("tput civis");      // Hide the cursor.

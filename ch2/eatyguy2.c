@@ -25,8 +25,22 @@ double gettime() {
   return tv.tv_sec + 1e-6 * tv.tv_usec;
 }
 
-void start() {
+int getkey() {
 
+  // Make reading from stdin non-blocking.
+  int flags = fcntl(STDIN_FILENO, F_GETFL);
+  fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
+
+  int ch = getchar();
+
+  // Turn off non-blocking I/O. On some systems, leaving stdin non-blocking
+  // will also leave stdout non-blocking, which can cause printing errors.
+  fcntl(STDIN_FILENO, F_SETFL, flags);
+  return ch;
+}
+
+
+void start() {
   // Terminal setup.
   system("tput clear");      // Clear the screen.
   system("tput civis");      // Hide the cursor.
@@ -108,7 +122,7 @@ int main() {
     lua_getfield(L, -1, "loop");
     lua_call(L, 0, 0);
 
-    int c = getchar();
+    int c = getkey();
     if (c == ESC_KEY || c == 'q' || c == 'Q') done();
   }
 
