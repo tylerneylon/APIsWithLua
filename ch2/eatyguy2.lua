@@ -138,7 +138,7 @@ end
 function eatyguy.init()
 
   -- Set up the grid size and pseudorandom number generation.
-  grid_w, grid_h = 39, 23
+  grid_w, grid_h = 39, 21
   math.randomseed(os.time())
 
   -- Build the maze.
