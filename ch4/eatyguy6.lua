@@ -97,6 +97,7 @@ local function draw(clock)
   player:draw(grid)
 end
 
+
 -- Public functions.
 
 function eatyguy.init()

@@ -131,6 +131,7 @@ local function draw(clock)
   end
 end
 
+
 -- Public functions.
 
 function eatyguy.init()

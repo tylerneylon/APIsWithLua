@@ -2,6 +2,7 @@
 
 local eatyguy = {}
 
+
 -- Globals.
 
 local percent_extra_paths = 15
@@ -10,6 +11,7 @@ local grid_w, grid_h      = nil, nil
 local player = {pos      = {1, 1},
                 dir      = {1, 0},
                 next_dir = {1, 0}}
+
 
 -- Internal functions.
 
@@ -131,6 +133,7 @@ local function draw()
     player.old_pos = nil
   end
 end
+
 
 -- Public functions.
 
