@@ -69,9 +69,9 @@ local function update(key)
   grid[p[1]][p[2]] = '  '
 
   -- Update the next direction if an arrow key was pressed.
-  local dir_of_key = {left = {-1, 0}, right = {1, 0},
-                      up   = {0, -1}, down  = {0, 1}}
-  local new_dir = dir_of_key[key]
+  local direction_of_key = {left = {-1, 0}, right = {1, 0},
+                            up   = {0, -1}, down  = {0, 1}}
+  local new_dir = direction_of_key[key]
   if new_dir then player.next_dir = new_dir end
 
   -- Only move every move_delta seconds.
@@ -140,7 +140,7 @@ end
 function eatyguy.init()
 
   -- Set up the grid size and pseudorandom number generation.
-  grid_w, grid_h = 39, 23
+  grid_w, grid_h = 39, 21
   math.randomseed(os.time())
 
   -- Build the maze.
