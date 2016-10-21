@@ -5,18 +5,18 @@
 -- of tput calls.
 
 
--- Local functions won't be globally visible after this script
--- completes.
+-- Local functions like memoized_cmd won't be globally visible
+-- after this script completes.
 
-local cached_strs = {}  -- Maps cmd -> str.
+local memoized_strs = {}  -- Maps cmd -> str.
 
-local function cached_cmd(cmd)
-  if not cached_strs[cmd] then
-    local p = io.popen(cmd)
-    cached_strs[cmd] = p:read()
-    p:close()
+local function memoized_cmd(shell_cmd)
+  if not memoized_strs[shell_cmd] then
+    local pipe = io.popen(shell_cmd)
+    memoized_strs[shell_cmd] = pipe:read()
+    pipe:close()
   end
-  io.write(cached_strs[cmd])
+  io.write(memoized_strs[shell_cmd])
 end
 
 
@@ -25,9 +25,9 @@ end
 
 function set_color(b_or_f, color)
   assert(b_or_f == 'b' or b_or_f == 'f')
-  cached_cmd('tput seta' .. b_or_f .. ' ' .. color)
+  memoized_cmd('tput seta' .. b_or_f .. ' ' .. color)
 end
 
 function set_pos(x, y)
-  cached_cmd(('tput cup %d %d'):format(y, x))
+  memoized_cmd(('tput cup %d %d'):format(y, x))
 end

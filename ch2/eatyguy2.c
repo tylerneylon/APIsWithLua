@@ -45,10 +45,6 @@ void start() {
   system("tput clear");      // Clear the screen.
   system("tput civis");      // Hide the cursor.
   system("stty raw -echo");  // Improve access to keypresses.
-
-  // Modify stdin's file descriptor to make reads non-blocking.
-  int flags = fcntl(STDIN_FILENO, F_GETFL);
-  fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 }
 
 void done() {

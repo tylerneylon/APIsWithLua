@@ -22,6 +22,9 @@
 #include <time.h>
 #include <unistd.h>
 
+// 27 is the decimal representation of Esc in ASCII.
+#define ESC_KEY 27
+
 
 // Internal functions.
 
@@ -156,7 +159,7 @@ int main() {
   while (1) {
     int is_end_of_seq;
     int key = getkey(&is_end_of_seq);
-    if (key == 27 || key == 'q' || key == 'Q') done();
+    if (key == ESC_KEY || key == 'q' || key == 'Q') done();
 
     // Call eatyguy.loop(<key>).
     lua_getfield(L, -1, "loop");

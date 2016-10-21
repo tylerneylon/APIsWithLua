@@ -115,7 +115,7 @@ local function draw()
   -- Draw the player.
   set_color('b', 3)  -- Yellow background.
   set_color('f', 0)  -- Black foreground.
-  local x = 2 * player.pos[1]
+  local x = 2 * player.pos[1]  -- Each tile is 2 chars wide.
   local y =     player.pos[2]
   set_pos(x, y)
   io.write(chars)
