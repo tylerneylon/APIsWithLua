@@ -14,7 +14,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-// 27 is the decimal representation of Escape in ASCII.
+// 27 is the decimal representation of Esc in ASCII.
 #define ESC_KEY 27
 
 // Internal functions.
