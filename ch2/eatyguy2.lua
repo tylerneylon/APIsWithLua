@@ -66,8 +66,8 @@ local next_move_time = nil
 local function update()
 
   -- Ensure any dot under the player has been eaten.
-  local p = player.pos
-  grid[p[1]][p[2]] = '  '
+  local cur_pos = player.pos
+  grid[cur_pos[1]][cur_pos[2]] = '  '
 
   -- Only move every move_delta seconds.
   if next_move_time == nil then
