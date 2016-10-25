@@ -26,32 +26,34 @@ local function is_in_bounds(x, y)
           1 <= y and y <= grid_h)
 end
 
-local function get_nbor_dirs(x, y, perc_extra)
-  -- perc_extra is the percent chance of including extra paths.
-  perc_extra = perc_extra or 0
-  local nbor_dirs = {}
-  local all_dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
-  for _, dir in pairs(all_dirs) do
-    local nx, ny = x + 2 * dir[1], y + 2 * dir[2]
-    local is_extra_ok = (math.random(100) <= perc_extra)
-    -- Add `dir` if the nbor is not yet in a path, or if we
-    -- randomly got an extra ok using perc_extra.
+local function get_neighbor_directions(x, y, percent_extra)
+  -- percent_extra is the percent chance of adding extra paths.
+  percent_extra = percent_extra or 0
+  local neighbor_directions = {}
+  local all_directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
+  for _, direction in pairs(all_directions) do
+    local nx, ny = x + 2 * direction[1], y + 2 * direction[2]
+    local is_extra_ok = (math.random(100) <= percent_extra)
+    -- Add `direction` if the neighbor is not yet in a path, or
+    -- if we randomly got an extra ok using percent_extra.
     if is_in_bounds(nx, ny) and
        (not grid[nx][ny] or is_extra_ok) then
-      table.insert(nbor_dirs, dir)
+      table.insert(neighbor_directions, direction)
     end
   end
-  return nbor_dirs
+  return neighbor_directions
 end
 
 local function drill_path_from(x, y)
   grid[x][y] = '. '
-  local nbor_dirs = get_nbor_dirs(x, y)
-  while #nbor_dirs > 0 do
-    local dir = table.remove(nbor_dirs, math.random(#nbor_dirs))
-    grid[x + dir[1]][y + dir[2]] = '. '
-    drill_path_from(x + 2 * dir[1], y + 2 * dir[2])
-    nbor_dirs = get_nbor_dirs(x, y, percent_extra_paths)
+  local neighbor_directions = get_neighbor_directions(x, y)
+  while #neighbor_directions > 0 do
+    local direction = table.remove(neighbor_directions,
+                          math.random(#neighbor_directions))
+    grid[x + direction[1]][y + direction[2]] = '. '
+    drill_path_from(x + 2 * direction[1], y + 2 * direction[2])
+    neighbor_directions = get_neighbor_directions(x, y,
+                                          percent_extra_paths)
   end
 end
 
@@ -61,13 +63,13 @@ local next_move_time = nil
 local function update(state)
 
   -- Ensure any dot under the player has been eaten.
-  local p = player.pos
-  grid[p[1]][p[2]] = '  '
+  local cur_pos = player.pos
+  grid[cur_pos[1]][cur_pos[2]] = '  '
 
   -- Update the next direction if an arrow key was pressed.
-  local dir_of_key = {left = {-1, 0}, right = {1, 0},
-                      up   = {0, -1}, down  = {0, 1}}
-  local new_dir = dir_of_key[state.key]
+  local direction_of_key = {left = {-1, 0}, right = {1, 0},
+                            up   = {0, -1}, down  = {0, 1}}
+  local new_dir = direction_of_key[state.key]
   if new_dir then player.next_dir = new_dir end
 
   -- Only move every move_delta seconds.
@@ -96,8 +98,8 @@ local function draw(clock)
     ['0,-1'] = {"v.", "'."}
   }
   local anim_timestep = 0.2
-  local dirkey   = ('%d,%d'):format(player.dir[1],
-                                    player.dir[2])
+  local dirkey = ('%d,%d'):format(player.dir[1],
+                                  player.dir[2])
   -- framekey switches between 1 & 2; basic sprite animation.
   local framekey = math.floor(clock / anim_timestep) % 2 + 1
   player.chars   = draw_data[dirkey][framekey]
@@ -146,7 +148,8 @@ function eatyguy.init()
       end
       io.flush()                     -- Needed for color output.
     end
-    io.write('\r\n')                 -- Move cursor to next row.
+    set_color('b', 0)                -- End the lines in black.
+    io.write(' \r\n')                -- Move cursor to next row.
   end
 end
 
