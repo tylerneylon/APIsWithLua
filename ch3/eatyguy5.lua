@@ -107,8 +107,8 @@ local function draw(clock)
     ['0,-1'] = {"v.", "'."}
   }
   local anim_timestep = 0.2
-  local dirkey   = ('%d,%d'):format(player.dir[1],
-                                    player.dir[2])
+  local dirkey = ('%d,%d'):format(player.dir[1],
+                                  player.dir[2])
   -- framekey switches between 1 & 2; basic sprite animation.
   local framekey = math.floor(clock / anim_timestep) % 2 + 1
   local chars    = draw_data[dirkey][framekey]
