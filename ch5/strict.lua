@@ -20,8 +20,8 @@ to throw errors on all bad global name uses, not just for the
 current file.
 
 There are a number of files similar to this one available
-online, as well as described in the Programming in Lua book.
-This happens to be a version that I like.
+online, as well as described in the book Programming in Lua by
+Roberto Ierusalimschy. This happens by be a version I like.
 
 --]]
 
