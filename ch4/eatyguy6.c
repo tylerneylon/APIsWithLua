@@ -61,6 +61,7 @@ void sleephires(double sec) {
 void start() {
 
   // Terminal setup.
+  system("tput setab 0");    // Use a black background.
   system("tput clear");      // Clear the screen.
   system("tput civis");      // Hide the cursor.
   system("stty raw -echo");  // Improve access to keypresses.
