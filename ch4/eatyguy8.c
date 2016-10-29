@@ -35,6 +35,10 @@ double gettime() {
 
 int getkey(int *is_end_of_seq) {
 
+  // Make reading from stdin non-blocking.
+  int flags = fcntl(STDIN_FILENO, F_GETFL);
+  fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
+
   // We care about two cases:
   // Case 1: A sequence of the form 27, 91, X; return X.
   // Case 2: For any other sequence, return each int separately.
@@ -45,11 +49,18 @@ int getkey(int *is_end_of_seq) {
     int next = getchar();
     if (next == 91) {
       *is_end_of_seq = 1;
-      return getchar();
+      ch = getchar();
+      goto end;
     }
     // If we get here, then we're not in a 27, 91, X sequence.
     ungetc(next, stdin);
   }
+
+end:
+
+  // Turn off non-blocking I/O. On some systems, leaving stdin non-blocking
+  // will also leave stdout non-blocking, which can cause printing errors.
+  fcntl(STDIN_FILENO, F_SETFL, flags);
   return ch;
 }
 
@@ -61,16 +72,11 @@ void sleephires(double sec) {
 }
 
 void start() {
-
   // Terminal setup.
   system("tput setab 0");    // Use a black background.
   system("tput clear");      // Clear the screen.
   system("tput civis");      // Hide the cursor.
   system("stty raw -echo");  // Improve access to keypresses.
-
-  // Make reading from stdin non-blocking.
-  int flags = fcntl(STDIN_FILENO, F_GETFL);
-  fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 }
 
 void done() {
