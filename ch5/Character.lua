@@ -13,9 +13,10 @@ function Character:new(c)
 end
 
 function Character:can_move_in_dir(dir, grid)
-  local p = self.pos
-  local gx, gy = p[1] + dir[1], p[2] + dir[2]
-  return (grid[gx] and grid[gx][gy]), {gx, gy}
+  local pos = self.pos
+  local grid_x, grid_y = pos[1] + dir[1], pos[2] + dir[2]
+  local can_move = grid[grid_x] and grid[grid_x][grid_y]
+  return can_move, {grid_x, grid_y}
 end
 
 function Character:move_if_possible(grid)
