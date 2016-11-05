@@ -35,34 +35,35 @@ local function is_in_bounds(pt)
           1 <= pt.y and pt.y <= grid_h)
 end
 
-local function get_nbor_dirs(pt, perc_extra)
-  -- perc_extra is the percent chance of including extra paths.
-  perc_extra = perc_extra or 0
-  local nbor_dirs = {}
-  local all_dirs = {pair{1, 0}, pair{-1,  0},
-                    pair{0, 1}, pair{ 0, -1}}
-  for _, dir in pairs(all_dirs) do
-    local n_pt = pt + dir * 2  -- The nbor point.
-    local is_extra_ok = (math.random(100) <= perc_extra)
-    -- Add `dir` if the nbor is not yet in a path, or if we
-    -- randomly got an extra ok using perc_extra.
+local function get_neighbor_directions(pt, percent_extra)
+  -- percent_extra is the percent chance of adding extra paths.
+  percent_extra = percent_extra or 0
+  local neighbor_directions = {}
+  local all_directions = {pair{1, 0}, pair{-1, 0},
+                          pair{0, 1}, pair{0, -1}}
+  for _, direction in pairs(all_directions) do
+    local n_pt = pt + direction * 2  -- The neighbor point.
+    local is_extra_ok = (math.random(100) <= percent_extra)
+    -- Add `direction` if the neighbor is not yet in a path, or
+    -- if we randomly got an extra ok using percent_extra.
     if is_in_bounds(n_pt) and
        (not grid[n_pt.x][n_pt.y] or is_extra_ok) then
-      table.insert(nbor_dirs, dir)
+      table.insert(neighbor_directions, direction)
     end
   end
-  return nbor_dirs
+  return neighbor_directions
 end
 
 local function drill_path_from(pt)
   grid[pt.x][pt.y] = '. '
-  local nbor_dirs = get_nbor_dirs(pt)
-  while #nbor_dirs > 0 do
-    -- Drill recursively in a random direction from nbor_dirs.
-    local dir = table.remove(nbor_dirs, math.random(#nbor_dirs))
-    grid[pt.x + dir.x][pt.y + dir.y] = '. '
-    drill_path_from(pt + dir * 2)
-    nbor_dirs = get_nbor_dirs(pt, percent_extra_paths)
+  local neighbor_directions = get_neighbor_directions(pt)
+  while #neighbor_directions > 0 do
+    local direction = table.remove(neighbor_directions,
+                          math.random(#neighbor_directions))
+    grid[pt.x + direction.x][pt.y + direction.y] = '. '
+    drill_path_from(pt + direction * 2)
+    neighbor_directions = get_neighbor_directions(pt,
+                                          percent_extra_paths)
   end
 end
 
@@ -72,13 +73,15 @@ local next_move_time = nil
 local function update(state)
 
   -- Ensure any dot under the player has been eaten.
-  local pt = pair(player.pos)
-  grid[pt.x][pt.y] = '  '
+  local cur_pos = player.pos
+  grid[cur_pos[1]][cur_pos[2]] = '  '
 
   -- Update the next direction if an arrow key was pressed.
-  local dir_of_key = {left = pair{-1,  0}, right = pair{1, 0},
-                      up   = pair{ 0, -1}, down  = pair{0, 1}}
-  local new_dir = dir_of_key[state.key]
+  local direction_of_key = {left  = pair{-1, 0},
+                            right = pair{1, 0},
+                            up    = pair{0, -1},
+                            down  = pair{0, 1}}
+  local new_dir = direction_of_key[state.key]
   if new_dir then player.next_dir = new_dir end
 
   -- Only move every move_delta seconds.
