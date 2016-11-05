@@ -73,8 +73,8 @@ local next_move_time = nil
 local function update(state)
 
   -- Ensure any dot under the player has been eaten.
-  local cur_pos = player.pos
-  grid[cur_pos[1]][cur_pos[2]] = '  '
+  local pt = pair(player.pos)
+  grid[pt.x][pt.y] = '  '
 
   -- Update the next direction if an arrow key was pressed.
   local direction_of_key = {left  = pair{-1, 0},
