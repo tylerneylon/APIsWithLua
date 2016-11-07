@@ -1,4 +1,4 @@
-// limited_script.c
+// library_subset.c
 
 #include "lauxlib.h"
 #include "lua.h"
