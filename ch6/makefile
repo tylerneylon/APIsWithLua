@@ -38,7 +38,7 @@ else
 	mm_make      = cc -std=c99 mymodule.c -o mymodule.so $(soflags)
 endif
 
-files = eatyguy10 Pair.o track_memory library_subset limit_memory
+files = eatyguy10 Pair.o track_memory library_subset limit_memory limit_cpu
 
 cc = cc -std=c99
 
@@ -56,6 +56,9 @@ track_memory: track_memory.c $(lualib)
 	$(cc) $< -o $@ $(flags)
 
 limit_memory: limit_memory.c $(lualib)
+	$(cc) $< -o $@ $(flags)
+
+limit_cpu: limit_cpu.c $(lualib)
 	$(cc) $< -o $@ $(flags)
 
 library_subset: library_subset.c $(lualib)

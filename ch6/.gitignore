@@ -2,4 +2,5 @@ eatyguy10
 track_memory
 limit_memory
 library_subset
+limit_cpu
 test1
