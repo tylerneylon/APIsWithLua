@@ -1,12 +1,13 @@
 // limit_cpu.c
 //
 
+#include "interpreter.h"
+
 #include "lauxlib.h"
 #include "lua.h"
 #include "lualib.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <sys/errno.h>
 
 int do_limit_instructions    =    1;
@@ -26,10 +27,8 @@ void hook(lua_State *L, lua_Debug *ar) {
   }
 }
 
-char *line(char *buff, int size) {
-  printf("%ld instructions executed\n", instruction_count);
-  printf("> ");
-  return fgets(buff, size, stdin);
+void print_status() {
+  printf("%ld instructions run so far\n", instruction_count);
 }
 
 int main() {
@@ -37,14 +36,10 @@ int main() {
   luaL_openlibs(L);
   lua_sethook(L, hook, LUA_MASKCOUNT, instructions_per_hook);
 
-  char buff[2048];
-  while (line(buff, sizeof(buff))) {
-    int error = luaL_loadstring(L, buff);
-    if (!error) error = lua_pcall(L, 0, 0, 0);
-    if (error) {
-      fprintf(stderr, "%s\n", lua_tostring(L, -1));
-      lua_pop(L, 1);
-    }
+  int keep_going = 1;
+  while (keep_going) {
+    print_status();
+    keep_going = accept_and_run_a_line(L);
   }
 
   lua_close(L);
