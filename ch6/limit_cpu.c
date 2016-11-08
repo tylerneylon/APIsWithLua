@@ -36,11 +36,8 @@ int main() {
   luaL_openlibs(L);
   lua_sethook(L, hook, LUA_MASKCOUNT, instructions_per_hook);
 
-  int keep_going = 1;
-  while (keep_going) {
-    print_status();
-    keep_going = accept_and_run_a_line(L);
-  }
+  print_status();
+  while (accept_and_run_a_line(L)) print_status();
 
   lua_close(L);
   return 0;

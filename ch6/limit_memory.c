@@ -43,11 +43,8 @@ int main() {
   lua_State *L = lua_newstate(alloc, NULL);
   luaL_openlibs(L);
 
-  int keep_going = 1;
-  while (keep_going) {
-    print_status();
-    keep_going = accept_and_run_a_line(L);
-  }
+  print_status();
+  while (accept_and_run_a_line(L)) print_status();
 
   lua_close(L);
   print_status();
