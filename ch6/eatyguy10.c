@@ -33,11 +33,6 @@ double gettime() {
   return tv.tv_sec + 1e-6 * tv.tv_usec;
 }
 
-int msg_handler(lua_State *L) {
-  luaL_traceback(L, L, NULL, 1);
-  return 1;
-}
-
 int getkey(int *is_end_of_seq) {
 
   // Make reading from stdin non-blocking.

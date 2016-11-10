@@ -1,26 +1,23 @@
 -- user_baddy2.lua
 
+-- Return the dot product of vectors a and b.
 local function dot(a, b)
   return a[1] * b[1] + a[2] * b[2]
 end
 
-local function s(pt)
-  return tostring(pt[1]) .. ', ' .. tostring(pt[2])
-end
-
-local dir = pair {1, 0}
+local direction = pair {1, 0}
 
 -- Return true iff either we can no longer move forward, or if
 -- a left or right turn is available.
 local function is_turning_point(possible_dirs)
 
-  local backwards       = pair {-dir.x, -dir.y}
+  local backwards       = pair {-direction.x, -direction.y}
   local can_go_straight = false
   local can_turn        = false
   local straight_i      = 0
 
   for i, possible_dir in pairs(possible_dirs) do
-    if possible_dir == dir then
+    if possible_dir == direction then
       can_go_straight = true
       straight_i      = i
     elseif possible_dir ~= backwards then
@@ -56,6 +53,6 @@ return function (baddy, possible_dirs, grid, player)
   if math.random(3) == 1 then
     choice_i = math.random(#possible_dirs)
   end
-  dir = possible_dirs[choice_i]
+  direction = possible_dirs[choice_i]
   return choice_i
 end
