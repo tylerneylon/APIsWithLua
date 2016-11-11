@@ -5,12 +5,13 @@
 
 local Baddy = require 'Baddy'
 
--- TODO Define the next function in one place only.
-
--- Expect a Pair or a table; if it's a table, convert to a Pair.
-local function pair(t)
-  -- This calls Pair:new() only if t is a table.
-  return (type(t) == 'table') and Pair:new(t) or t
+local function is_in_table(needle, haystack)
+  for _, value in pairs(haystack) do
+    if value == needle then
+      return true
+    end
+  end
+  return false
 end
 
 local UserBaddy = Baddy:new({})
@@ -26,6 +27,11 @@ function UserBaddy:new(b)
   return setmetatable(b, self)
 end
 
+-- XXX
+function s(p)
+  return ('%d,%d'):format(p[1], p[2])
+end
+
 function UserBaddy:move_if_possible(grid, player)
 
   -- Determine which directions are possible to move in.
@@ -38,10 +44,22 @@ function UserBaddy:move_if_possible(grid, player)
   end
 
   -- Call the user-defined movement function.
-  local dir_index = self:get_dir(possible_dirs, grid, player)
-  self.dir        = possible_dirs[dir_index] or possible_dirs[1]
-  self.old_pos    = self.pos
-  _, self.pos     = self:can_move_in_dir(self.dir, grid)
+  self.dir = self:get_dir(possible_dirs, grid, player)
+
+  io.stderr:write('\n--- new call to UserBaddy:move_if_possible\n')
+  io.stderr:write('possible_dirs:\n')
+  for _, d in ipairs(possible_dirs) do
+    io.stderr:write(('%s\n'):format(s(d)))
+  end
+  io.stderr:write(('Got self.dir = %s\n'):format(s(self.dir)))
+
+  if not is_in_table(self.dir, possible_dirs) then
+    self.dir = possible_dirs[1]
+  end
+
+  -- Update our position and saved old position.
+  self.old_pos = self.pos
+  _, self.pos  = self:can_move_in_dir(self.dir, grid)
 end
 
 return UserBaddy
