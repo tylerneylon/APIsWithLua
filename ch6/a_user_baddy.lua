@@ -6,6 +6,7 @@ local function dot(a, b)
 end
 
 local direction = pair {1, 0}
+local num_turns = 0
 
 -- Return true iff either we can no longer move forward, or if
 -- a left or right turn is available.
@@ -33,12 +34,14 @@ return function (baddy, possible_dirs, grid, player)
     return direction
   end
 
-  -- 25% of the time, turn in a random direction.
-  if math.random(4) == 1 then
-    return possible_dirs[math.random(#possible_dirs)]
+  -- Every 5th turn is random.
+  num_turns = num_turns + 1
+  if num_turns % 5 == 0 then
+    direction = possible_dirs[math.random(#possible_dirs)]
+    return direction
   end
 
-  -- The other 75% of the time, move toward the player.
+  -- Otherwise, try to move toward the player.
   
   local to_player = pair {player.pos[1] - baddy.pos[1],
                           player.pos[2] - baddy.pos[2]}

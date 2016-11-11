@@ -27,11 +27,6 @@ function UserBaddy:new(b)
   return setmetatable(b, self)
 end
 
--- XXX
-function s(p)
-  return ('%d,%d'):format(p[1], p[2])
-end
-
 function UserBaddy:move_if_possible(grid, player)
 
   -- Determine which directions are possible to move in.
@@ -45,13 +40,6 @@ function UserBaddy:move_if_possible(grid, player)
 
   -- Call the user-defined movement function.
   self.dir = self:get_dir(possible_dirs, grid, player)
-
-  io.stderr:write('\n--- new call to UserBaddy:move_if_possible\n')
-  io.stderr:write('possible_dirs:\n')
-  for _, d in ipairs(possible_dirs) do
-    io.stderr:write(('%s\n'):format(s(d)))
-  end
-  io.stderr:write(('Got self.dir = %s\n'):format(s(self.dir)))
 
   if not is_in_table(self.dir, possible_dirs) then
     self.dir = possible_dirs[1]
