@@ -38,30 +38,34 @@ else
 	mm_make      = cc -std=c99 mymodule.c -o mymodule.so $(soflags)
 endif
 
+eatyguys = eatyguy10
+
 interpreters = track_memory limit_memory limit_cpu
 
-binaries = eatyguy10 library_subset $(interpreters)
+binaries = library_subset
 
 obj_files = Pair.o interpreter.o
 
+all = $(eatyguys) $(interpreters) $(binaries)
+
 cc = cc -std=c99
 
-all: $(binaries)
+all: $(all)
 
 clean:
 	rm -f $(binaries) *.o
 
-eatyguy10: eatyguy10.c $(lualib) Pair.o
+$(eatyguys) : % : %.c $(lualib) Pair.o
 	$(cc) $^ -o $@ $(flags)
 
 $(interpreters) : % : %.c $(lualib) interpreter.o
 	$(cc) $^ -o $@ $(flags)
 
+$(binaries) : % : %.c $(lualib)
+	$(cc) $< -o $@ $(flags)
+
 $(obj_files) : %.o : %.c %.h
 	$(cc) -c $< -o $@ $(cflags)
-
-library_subset: library_subset.c $(lualib)
-	$(cc) $< -o $@ $(flags)
 
 ../lua/liblua.a:
 	make -C ../lua liblua.a $(luaflags)
