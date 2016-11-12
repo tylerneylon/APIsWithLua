@@ -40,31 +40,28 @@ endif
 
 interpreters = track_memory limit_memory limit_cpu
 
-files = eatyguy10 Pair.o library_subset $(interpreters)
+binaries = eatyguy10 library_subset $(interpreters)
+
+obj_files = Pair.o interpreter.o
 
 cc = cc -std=c99
 
-all = $(files)
-
-all: $(all)
+all: $(binaries)
 
 clean:
-	rm -f $(all) *.o
+	rm -f $(binaries) *.o
 
 eatyguy10: eatyguy10.c $(lualib) Pair.o
-	$(cc) $< -o $@ Pair.o $(flags)
+	$(cc) $^ -o $@ $(flags)
 
 $(interpreters) : % : %.c $(lualib) interpreter.o
 	$(cc) $^ -o $@ $(flags)
+
+$(obj_files) : %.o : %.c %.h
+	$(cc) -c $< -o $@ $(cflags)
 
 library_subset: library_subset.c $(lualib)
 	$(cc) $< -o $@ $(flags)
 
 ../lua/liblua.a:
 	make -C ../lua liblua.a $(luaflags)
-
-Pair.o: Pair.c Pair.h
-	$(cc) -c $< -o $@ $(cflags)
-
-interpreter.o: interpreter.c interpreter.h
-	$(cc) -c $< -o $@ $(cflags)
