@@ -14,7 +14,9 @@ ifeq ($(OS),Windows_NT)
 	soext        = dll
 	pair_so_make = -shared Pair.o -o Pair.dll -llua
 	pair_so_dep  = Pair.o
-	mm_make      = cc -std=c99 -c mymodule.c -o mymodule.o && cc -shared mymodule.o -o mymodule.dll -llua
+	soflags      = -shared -llua
+	so_dep       = %.o
+	so_make      = $(cc) $< -o $@ $(soflags)
 else ifeq ($(shell uname),Darwin)
 	# macOS.
 	cflags       = -I../lua
@@ -23,8 +25,8 @@ else ifeq ($(shell uname),Darwin)
 	luaflags     = SYSCFLAGS="-DLUA_USE_MACOSX"
 	soext        = so
 	soflags      = -undefined dynamic_lookup -I../lua
-	pair_so_make = Pair.c -o Pair.so $(soflags)
-	mm_make      = cc -std=c99 mymodule.c -o mymodule.so $(soflags)
+	so_dep       = %.c %.h
+	so_make      = $(cc) $< -o $@ $(soflags)
 else
 	# Guess Linux.
 	cflags       = -D_POSIX_C_SOURCE=199309L -I../lua
@@ -33,38 +35,35 @@ else
 	luaflags     = SYSCFLAGS="-DLUA_USE_LINUX"
 	soext        = so
 	soflags      = -I../lua -shared -fpic
+	so_dep       = %.c %.h
+	so_make      = $(cc) $< -o $@ $(soflags)
 	pair_so_make = Pair.c -o Pair.so $(soflags)
 	mm_make      = cc -std=c99 mymodule.c -o mymodule.so $(soflags)
 endif
 
-files = eatyguy6 eatyguy7 eatyguy8 Pair.o Pair.$(soext) mymodule.$(soext)
+eatyguys = eatyguy6 eatyguy7 eatyguy8
+
+obj_files = Pair.o mymodule.o
+
+so_files = Pair.$(soext) mymodule.$(soext)
+
+all = $(eatyguys) $(obj_files) $(so_files)
 
 cc = cc -std=c99
-
-all = $(files)
 
 all: $(all)
 
 clean:
 	rm -f $(all) *.o
 
-eatyguy6: eatyguy6.c $(lualib)
-	$(cc) $< -o $@ $(flags)
+$(eatyguys) : % : %.c $(lualib) Pair.o
+	$(cc) $^ -o $@ $(flags)
 
-eatyguy7: eatyguy7.c $(lualib)
-	$(cc) $< -o $@ $(flags)
+$(obj_files) : %.o : %.c %.h
+	$(cc) -c $< -o $@ $(cflags)
 
-eatyguy8: eatyguy8.c $(lualib) Pair.o
-	$(cc) $< -o $@ Pair.o $(flags)
+$(so_files) : %.$(soext) : $(so_dep)
+	$(so_make)
 
 ../lua/liblua.a:
 	make -C ../lua liblua.a $(luaflags)
-
-Pair.o: Pair.c Pair.h
-	$(cc) -c $< -o $@ $(cflags)
-
-Pair.$(soext): Pair.c Pair.h $(pair_so_dep)
-	$(cc) $(pair_so_make)
-
-mymodule.$(soext): mymodule.c
-	$(mm_make)

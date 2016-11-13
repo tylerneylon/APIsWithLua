@@ -1,6 +1,6 @@
 // mymodule.c
 
-#include "lua.h"
+#include "mymodule.h"
 #include <stdio.h>
 
 int luaopen_mymodule(lua_State *L) {
