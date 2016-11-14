@@ -10,42 +10,38 @@
 # Platform-specific settings.
 ifeq ($(OS),Windows_NT)
 	# Windows.
-	flags        = -llua
-	soext        = dll
-	pair_so_make = -shared Pair.o -o Pair.dll -llua
-	pair_so_dep  = Pair.o
-	soflags      = -shared -llua
-	so_dep       = %.o
-	so_make      = $(cc) $< -o $@ $(soflags)
+	flags     = -llua
+	so_ext    = dll
+	so_flags  = -shared -llua
+	so_dep    = %.o
+	so_make   = $(cc) $< -o $@ $(so_flags)
 else ifeq ($(shell uname),Darwin)
 	# macOS.
-	cflags       = -I../lua
-	flags        = -llua -L../lua $(cflags)
-	lualib       = ../lua/liblua.a
-	luaflags     = SYSCFLAGS="-DLUA_USE_MACOSX"
-	soext        = so
-	soflags      = -undefined dynamic_lookup -I../lua
-	so_dep       = %.c %.h
-	so_make      = $(cc) $< -o $@ $(soflags)
+	cflags    = -I../lua
+	flags     = -llua -L../lua $(cflags)
+	lua_lib   = ../lua/liblua.a
+	lua_flags = SYSCFLAGS="-DLUA_USE_MACOSX"
+	so_ext    = so
+	so_flags  = -undefined dynamic_lookup -I../lua
+	so_dep    = %.c %.h
+	so_make   = $(cc) $< -o $@ $(so_flags)
 else
 	# Guess Linux.
-	cflags       = -D_POSIX_C_SOURCE=199309L -I../lua
-	flags        = -llua -L../lua -lm -ldl $(cflags)
-	lualib       = ../lua/liblua.a
-	luaflags     = SYSCFLAGS="-DLUA_USE_LINUX"
-	soext        = so
-	soflags      = -I../lua -shared -fpic
-	so_dep       = %.c %.h
-	so_make      = $(cc) $< -o $@ $(soflags)
-	pair_so_make = Pair.c -o Pair.so $(soflags)
-	mm_make      = cc -std=c99 mymodule.c -o mymodule.so $(soflags)
+	cflags    = -D_POSIX_C_SOURCE=199309L -I../lua
+	flags     = -llua -L../lua -lm -ldl $(cflags)
+	lua_lib   = ../lua/liblua.a
+	lua_flags = SYSCFLAGS="-DLUA_USE_LINUX"
+	so_ext    = so
+	so_flags  = -I../lua -shared -fpic
+	so_dep    = %.c %.h
+	so_make   = $(cc) $< -o $@ $(so_flags)
 endif
 
 eatyguys = eatyguy6 eatyguy7 eatyguy8
 
 obj_files = Pair.o mymodule.o
 
-so_files = Pair.$(soext) mymodule.$(soext)
+so_files = Pair.$(so_ext) mymodule.$(so_ext)
 
 all = $(eatyguys) $(obj_files) $(so_files)
 
@@ -56,14 +52,14 @@ all: $(all)
 clean:
 	rm -f $(all) *.o
 
-$(eatyguys) : % : %.c $(lualib) Pair.o
+$(eatyguys) : % : %.c $(lua_lib) Pair.o
 	$(cc) $^ -o $@ $(flags)
 
 $(obj_files) : %.o : %.c %.h
 	$(cc) -c $< -o $@ $(cflags)
 
-$(so_files) : %.$(soext) : $(so_dep)
+$(so_files) : %.$(so_ext) : $(so_dep)
 	$(so_make)
 
 ../lua/liblua.a:
-	make -C ../lua liblua.a $(luaflags)
+	make -C ../lua liblua.a $(lua_flags)
