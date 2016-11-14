@@ -59,7 +59,7 @@ $(obj_files) : %.o : %.c %.h
 	$(cc) -c $< -o $@ $(cflags)
 
 $(so_files) : %.$(so_ext) : $(so_dep)
-	$(so_make)
+	$(cc) $< -o $@ $(so_flags)
 
 ../lua/liblua.a:
 	make -C ../lua liblua.a $(lua_flags)
