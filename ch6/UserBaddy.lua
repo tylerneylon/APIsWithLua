@@ -20,10 +20,10 @@ local UserBaddy = Baddy:new({})
 -- This expects a table with keys {home, color, chars, script}.
 function UserBaddy:new(b)
   assert(b)  -- Require a table of initial values.
-  b.pos        = b.home
-  b.dir        = {-1, 0}
-  b.get_dir    = loadfile(b.script)()
-  self.__index = self
+  b.pos           = b.home
+  b.dir           = {-1, 0}
+  b.get_direction = loadfile(b.script)()
+  self.__index    = self
   return setmetatable(b, self)
 end
 
@@ -39,7 +39,7 @@ function UserBaddy:move_if_possible(grid, player)
   end
 
   -- Call the user-defined movement function.
-  self.dir = self:get_dir(possible_dirs, grid, player)
+  self.dir = self:get_direction(possible_dirs, grid, player)
 
   if not is_in_table(self.dir, possible_dirs) then
     self.dir = possible_dirs[1]
