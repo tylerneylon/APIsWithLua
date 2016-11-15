@@ -27,7 +27,8 @@ local function is_turning_point(possible_dirs)
   return not can_go_straight
 end
 
-return function (baddy, possible_dirs, grid, player)
+local function choose_direction(baddy, possible_dirs,
+                                grid, player)
 
   -- If we can't turn and we can go straight, then go straight.
   if not is_turning_point(possible_dirs) then
@@ -58,3 +59,5 @@ return function (baddy, possible_dirs, grid, player)
 
   return direction
 end
+
+return choose_direction
