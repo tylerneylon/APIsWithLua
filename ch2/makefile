@@ -1,2 +1,2 @@
 binaries = eatyguy1 eatyguy2
-include ../makefile_setup
+include ../build_settings.make

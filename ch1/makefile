@@ -1,2 +1,2 @@
 binaries = doscript loadmodule runmodule
-include ../makefile_setup
+include ../build_settings.make

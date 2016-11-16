@@ -12,4 +12,4 @@ interpreters = track_memory limit_memory limit_cpu
 binaries     = library_subset
 obj_files    = Pair.o interpreter.o
 
-include ../makefile_setup
+include ../build_settings.make

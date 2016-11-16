@@ -11,4 +11,4 @@ eatyguys  = eatyguy9
 binaries  = lua_error lua_pcall
 obj_files = Pair.o
 
-include ../makefile_setup
+include ../build_settings.make
