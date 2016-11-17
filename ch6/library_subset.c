@@ -35,7 +35,6 @@ int main() {
       break;
   }
 
-  // 
   luaL_dofile(L, "run_bash.lua");
 
   return 0;
