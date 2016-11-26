@@ -1,4 +1,4 @@
--- user_baddy2.lua
+-- a_user_baddy.lua
 
 -- Return the dot product of vectors a and b.
 local function dot(a, b)
