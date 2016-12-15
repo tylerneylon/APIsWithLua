@@ -106,6 +106,9 @@ void push_state_table(lua_State *L,
                       int key,
                       int is_end_of_seq) {
 
+  // The state of the Lua stack is given in indented comments in
+  // this function to clarify the actions of each function call.
+
   lua_newtable(L);
 
     // stack = [.., {}]
