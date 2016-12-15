@@ -54,7 +54,7 @@ else
 	so_make   = $(cc) $< -o $@ $(so_flags)
 endif
 
-all = $(binaries) $(eatyguys) $(obj_files) $(interpreters)
+all = $(binaries) $(eatyguys) $(obj_files) $(so_files) $(interpreters)
 
 all: $(all)
 

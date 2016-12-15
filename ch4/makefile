@@ -8,7 +8,7 @@
 #  
 
 eatyguys  = eatyguy6 eatyguy7 eatyguy8
-obj_files = Pair.o mymodule.o
-so_files  = Pair.$(so_ext) mymodule.$(so_ext)
+obj_files = Pair.o cmodule.o
+so_files  = Pair.$(so_ext) cmodule.$(so_ext)
 
 include ../build_settings.make
