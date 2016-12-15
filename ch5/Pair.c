@@ -35,12 +35,12 @@ int Pair_new(lua_State *L) {
   // Extract the x, y data from the stack.
   luaL_checktype(L, 2, LUA_TTABLE);
       // stack = [self, p]
-  lua_rawgeti(L, 2, 1);  // 1, 1 = idx in stack, idx in table
+  lua_rawgeti(L, 2, 1);  // 2, 1 = idx in stack, idx in table
       // stack = [self, p, p[1]]
   lua_rawgeti(L, 2, 2);
       // stack = [self, p, p[1], p[2]]
-  lua_Number x = lua_tonumber(L, -2);
-  lua_Number y = lua_tonumber(L, -1);
+  lua_Number x = lua_tonumber(L, -2);  // p[1]
+  lua_Number y = lua_tonumber(L, -1);  // p[2]
   lua_settop(L, 0);
       // stack = []
 
