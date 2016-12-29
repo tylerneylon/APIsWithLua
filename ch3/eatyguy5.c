@@ -174,6 +174,7 @@ int main() {
 
     // Call eatyguy.loop(state).
     lua_getfield(L, -1, "loop");
+    // This replaces the previous call to push_keypress().
     push_state_table(L, key, is_end_of_seq);
     lua_call(L, 1, 0);
 

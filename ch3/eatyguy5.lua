@@ -110,6 +110,7 @@ local function draw(clock)
   local dirkey = ('%d,%d'):format(player.dir[1],
                                   player.dir[2])
   -- framekey switches between 1 & 2; basic sprite animation.
+  -- We now use `clock` instead of calling timestamp().
   local framekey = math.floor(clock / anim_timestep) % 2 + 1
   local chars    = draw_data[dirkey][framekey]
 
