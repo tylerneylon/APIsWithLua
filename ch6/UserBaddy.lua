@@ -39,6 +39,7 @@ function UserBaddy:move_if_possible(grid, player)
   end
 
   -- Call the user-defined movement function.
+  -- The `self` value will become the first parameter sent in.
   self.dir = self:get_direction(possible_dirs, grid, player)
 
   if not is_in_table(self.dir, possible_dirs) then
