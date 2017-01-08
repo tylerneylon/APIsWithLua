@@ -26,16 +26,15 @@ int middle_fn(lua_State *L) {
   return 0;
 }
 
-#define register(fn) lua_register(L, #fn, fn)
-
 int main() {
 
   lua_State *L = luaL_newstate();
   luaL_openlibs(L);
-  register(my_error_handler);
-  register(fn_that_throws);
-  register(middle_fn);
-  
+
+  lua_register(L, "my_error_handler", my_error_handler);
+  lua_register(L, "fn_that_throws",   fn_that_throws);
+  lua_register(L, "middle_fn",        middle_fn);
+
   // Call middle_fn().
   lua_pushcfunction(L, my_error_handler);
   lua_getglobal(L, "middle_fn");
