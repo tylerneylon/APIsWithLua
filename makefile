@@ -10,7 +10,7 @@ subdirs = ch1 ch2 ch3 ch4 ch5 ch6
 all:
 	for dir in $(subdirs); do make -C $$dir; done
 	#
-	# Built products are the chapter directories (ch1, ch2, etc.)
+	# Built products are in the chapter directories (ch1, ch2, etc.)
 	#
 
 clean:

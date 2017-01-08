@@ -64,10 +64,10 @@ clean:
 $(binaries) : % : %.c $(lua_lib)
 	$(cc) $< -o $@ $(flags)
 
-$(eatyguys) : % : %.c $(lualib) Pair.o
+$(eatyguys) : % : %.c $(lua_lib) Pair.o
 	$(cc) $^ -o $@ $(flags)
 
-$(interpreters) : % : %.c $(lualib) interpreter.o
+$(interpreters) : % : %.c $(lua_lib) interpreter.o
 	$(cc) $^ -o $@ $(flags)
 
 $(obj_files) : %.o : %.c %.h
