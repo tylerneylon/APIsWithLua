@@ -174,6 +174,8 @@ int main() {
   while (1) {
     int is_end_of_seq;
     int key = getkey(&is_end_of_seq);
+
+    // Pass NULL to done() to print no ending message.
     if (key == ESC_KEY || key == 'q' || key == 'Q') done(NULL);
 
     // Call eatyguy.loop(state).
