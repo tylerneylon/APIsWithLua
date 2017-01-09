@@ -8,8 +8,11 @@ end
 local direction = pair {1, 0}
 local num_turns = 0
 
--- Return true iff either we can no longer move forward, or if
--- a left or right turn is available.
+-- The next function will return true when:
+--  * The player can turn left or right; or
+--  * the player can't go straight ahead.
+-- Intuitively, a "turning point" is any good place to consider
+-- moving in a new direction.
 local function is_turning_point(possible_dirs)
 
   local backwards       = pair {-direction.x, -direction.y}
@@ -42,7 +45,7 @@ local function choose_direction(baddy, possible_dirs,
     return direction
   end
 
-  -- Otherwise, try to move toward the player.
+  -- In the other 4 of 5 turns, try to move toward the player.
   
   local to_player = pair {player.pos[1] - baddy.pos[1],
                           player.pos[2] - baddy.pos[2]}

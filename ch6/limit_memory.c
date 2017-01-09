@@ -12,7 +12,7 @@
 #include <sys/errno.h>
 
 long bytes_alloced = 0;
-long max_bytes = 30000;
+long max_bytes = 30000;  // You can choose this value.
 
 void *alloc(void *ud,
             void *ptr,
