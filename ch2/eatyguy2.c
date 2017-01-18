@@ -33,8 +33,9 @@ int getkey() {
 
   int ch = getchar();
 
-  // Turn off non-blocking I/O. On some systems, leaving stdin non-blocking
-  // will also leave stdout non-blocking, which can cause printing errors.
+  // Turn off non-blocking I/O. On some systems, leaving stdin
+  // non-blocking will also leave stdout non-blocking, which can
+  // cause printing errors.
   fcntl(STDIN_FILENO, F_SETFL, flags);
   return ch;
 }
