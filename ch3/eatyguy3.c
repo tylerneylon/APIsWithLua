@@ -60,8 +60,8 @@ int getkey(int *is_end_of_seq) {
 end:
 
   // Turn off non-blocking I/O. On some systems, leaving stdin
-  // non-blocking will also leave stdout non-blocking, which can
-  // cause printing errors.
+  // non-blocking will also leave stdout non-blocking, which
+  // can cause printing errors.
   fcntl(STDIN_FILENO, F_SETFL, flags);
   return ch;
 }

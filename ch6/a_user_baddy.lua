@@ -45,7 +45,7 @@ local function choose_direction(baddy, possible_dirs,
     return direction
   end
 
-  -- Try moving toward the player in the other 4 out of 5 turns.
+  -- Try to go toward the player in the other 4 out of 5 turns.
   
   local to_player = pair {player.pos[1] - baddy.pos[1],
                           player.pos[2] - baddy.pos[2]}

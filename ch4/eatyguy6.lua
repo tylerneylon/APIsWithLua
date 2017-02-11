@@ -6,7 +6,7 @@ local eatyguy = {}
 -- Globals.
 
 local percent_extra_paths = 15
-local grid                = nil     -- grid[x][y]: falsy = wall.
+local grid                = nil  -- grid[x][y]: falsy = wall.
 local grid_w, grid_h      = nil, nil
 local player = Character:new({pos      = {1, 1},
                               dir      = {1, 0},

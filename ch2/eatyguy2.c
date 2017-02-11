@@ -25,6 +25,9 @@ double gettime() {
   return tv.tv_sec + 1e-6 * tv.tv_usec;
 }
 
+// This code is part of the file eatyguy2.c, which is the same
+// as eatyguy1.c except for lines in bold.
+
 int getkey() {
 
   // Make reading from stdin non-blocking.
@@ -34,8 +37,8 @@ int getkey() {
   int ch = getchar();
 
   // Turn off non-blocking I/O. On some systems, leaving stdin
-  // non-blocking will also leave stdout non-blocking, which can
-  // cause printing errors.
+  // non-blocking will also leave stdout non-blocking, which
+  // can cause printing errors.
   fcntl(STDIN_FILENO, F_SETFL, flags);
   return ch;
 }

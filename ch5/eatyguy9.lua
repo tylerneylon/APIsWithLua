@@ -79,7 +79,7 @@ end
 local function check_for_death()
   for _, baddy in pairs(baddies) do
     if pair(player.pos) == pair(baddy.pos) then
-      end_msg = 'Game over!'
+      end_mgs = 'Game over!'
     end
   end
 end
