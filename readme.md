@@ -4,7 +4,7 @@
 
 These code samples were written as companions to the O'Reilly
 book
-![*Creating Solid APIs with Lua*](https://www.safaribooksonline.com/library/view/creating-solid-apis/9781491986301/).
+[*Creating Solid APIs with Lua*](https://www.safaribooksonline.com/library/view/creating-solid-apis/9781491986301/).
 The samples are built up chapter-by-chapter, and focus on a particular
 game called *EatyGuy*, which looks like this:
 
